@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
   <title>PORKY A PALACIO</title>
   <style>
     :root{
@@ -21,7 +21,7 @@
       --panelStroke: rgba(0,0,0,.20);
 
       --rCyan:#2bd3ff;
-      --bannerH: 92px;
+      --bannerH: 70px; /* ✅ más pequeño para que entre todo */
     }
 
     *{ box-sizing:border-box; }
@@ -34,24 +34,28 @@
       touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
     }
-
     .pixel{ image-rendering: pixelated; image-rendering: crisp-edges; }
 
+    /* ✅ Full mobile browser */
     .app{
-      height:100%;
-      width:100%;
+      height:100vh;
+      width:100vw;
       display:grid;
       place-items:center;
-      padding: env(safe-area-inset-top) 10px env(safe-area-inset-bottom) 10px;
+      padding: 0;
     }
 
+    /* ✅ mantiene 9:16 sin deformar: ocupa toda la altura y se ajusta al ancho si es necesario */
     .phone{
-      width: min(520px, 100%);
+      height:100vh;
       aspect-ratio: 9 / 16;
-      border-radius: 18px;
+      width:auto;
+      max-width:100vw;
+
+      border-radius: 0;
       overflow:hidden;
       border: 2px solid var(--rCyan);
-      box-shadow: 0 18px 50px rgba(0,0,0,.25);
+      box-shadow: none;
       background: rgba(255,255,255,.06);
       backdrop-filter: blur(6px);
       position:relative;
@@ -92,21 +96,21 @@
       inset:0;
       display:grid;
       grid-template-rows: auto 1fr auto;
-      padding: 14px;
-      padding-bottom: calc(14px + var(--bannerH));
+      padding: 12px;
+      padding-bottom: calc(12px + var(--bannerH));
       pointer-events:none;
       z-index: 5;
     }
-
     .menuHeader{ text-align:center; }
 
+    /* ✅ título grande pero más compacto en móvil */
     .title{
-      margin: 6px 0 0 0;
+      margin: 4px 0 0 0;
       font-weight: 1000;
       letter-spacing: .09em;
       text-transform: uppercase;
       color: #f4fdff;
-      font-size: clamp(38px, 8.6vw, 66px);
+      font-size: clamp(30px, 7.2vw, 56px);
       text-shadow:
         0 3px 0 #c9f3ff,
         0 6px 0 #9fe6ff,
@@ -114,27 +118,26 @@
         0 14px 24px rgba(0,0,0,.38);
     }
     .sub{
-      margin: 6px 0 0 0;
+      margin: 4px 0 0 0;
       color: rgba(255,255,255,.97);
       text-shadow: 0 2px 0 rgba(0,0,0,.18);
-      font-size: 13px;
+      font-size: 12px;
       line-height: 1.25;
       opacity: .95;
     }
 
     .menuFooter{
       display:grid;
-      gap:12px;
+      gap:10px;
       pointer-events:auto;
     }
-
     .btnRow{ display:grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
     button{
       appearance:none;
       border:0;
       border-radius: 16px;
-      padding: 14px 12px;
+      padding: 12px 10px;     /* ✅ un poco más pequeño */
       font-weight: 1000;
       letter-spacing: .05em;
       text-transform: uppercase;
@@ -144,7 +147,7 @@
       text-shadow: 0 2px 0 rgba(0,0,0,.25);
       cursor:pointer;
       user-select:none;
-      font-size: 14px;
+      font-size: 13px;        /* ✅ más pequeño */
       backdrop-filter: blur(6px);
     }
     button:active{ transform: scale(.98); }
@@ -169,10 +172,10 @@
     /* HUD GAME */
     .hudScore{
       position:absolute;
-      top: 10px;
+      top: 8px;
       left: 50%;
       transform: translateX(-50%);
-      padding: 8px 12px;
+      padding: 7px 10px;
       border-radius: 16px;
       background: rgba(255,255,255,.35);
       border: 2px solid rgba(0,0,0,.14);
@@ -180,8 +183,8 @@
       text-shadow: 0 2px 0 rgba(0,0,0,.25);
       font-weight: 1000;
       letter-spacing:.03em;
-      font-size: 14px;
-      min-width: 160px;
+      font-size: 13px;
+      min-width: 150px;
       text-align:center;
       backdrop-filter: blur(6px);
       pointer-events:none;
@@ -190,17 +193,17 @@
 
     .gearBtn{
       position:absolute;
-      top: 10px;
-      right: 10px;
-      width: 46px;
-      height: 46px;
+      top: 8px;
+      right: 8px;
+      width: 44px;
+      height: 44px;
       border-radius: 16px;
       border: 2px solid rgba(0,0,0,.18);
       background: rgba(255,255,255,.35);
       backdrop-filter: blur(6px);
       display:grid;
       place-items:center;
-      font-size: 22px;
+      font-size: 20px;
       font-weight: 1000;
       cursor:pointer;
       user-select:none;
@@ -216,23 +219,23 @@
       display:none;
       align-items:center;
       justify-content:center;
-      padding: 16px;
+      padding: 14px;
       z-index: 30;
       pointer-events:auto;
     }
     .overlay.active{ display:flex; }
 
     .panel{
-      width:min(430px, 94%);
+      width:min(420px, 94%);
       background: var(--panel);
       border: 3px solid var(--panelStroke);
       border-radius: 18px;
-      padding: 14px;
+      padding: 12px;
       box-shadow: 0 18px 50px rgba(0,0,0,.25);
     }
     .panel h2{
-      margin: 0 0 10px 0;
-      font-size: 16px;
+      margin: 0 0 8px 0;
+      font-size: 14px;
       letter-spacing:.10em;
       text-transform: uppercase;
       color: rgba(0,0,0,.70);
@@ -250,10 +253,11 @@
       margin-bottom: 10px;
       font-weight: 900;
       color: rgba(0,0,0,.75);
+      font-size: 13px;
     }
     .toggle{ display:flex; gap:8px; }
     .toggle button{
-      padding: 10px 12px;
+      padding: 9px 10px;
       border-radius: 12px;
       border: 2px solid rgba(0,0,0,.10);
       background: rgba(0,0,0,.08);
@@ -262,6 +266,7 @@
       font-weight:1000;
       text-transform: uppercase;
       letter-spacing:.04em;
+      font-size: 12px;
     }
     .toggle button.on{
       background: rgba(78,192,78,.75);
@@ -273,7 +278,7 @@
       display:grid;
       grid-template-columns: 1fr 1fr;
       gap:10px;
-      margin-top: 8px;
+      margin-top: 6px;
     }
 
     .recordsBox{
@@ -281,12 +286,12 @@
       border: 2px solid rgba(0,0,0,.10);
       background: rgba(0,0,0,.05);
       padding: 10px;
-      max-height: 170px;
+      max-height: 160px;
       overflow:auto;
     }
     .recordsBox h3{
       margin:0 0 8px 0;
-      font-size: 12px;
+      font-size: 11px;
       letter-spacing:.10em;
       text-transform:uppercase;
       color: rgba(0,0,0,.70);
@@ -303,7 +308,7 @@
       display:flex;
       justify-content:space-between;
       gap:10px;
-      padding: 10px 10px;
+      padding: 9px 10px;
       border-radius: 14px;
       background: rgba(255,255,255,.65);
       border: 1px solid rgba(0,0,0,.10);
@@ -314,15 +319,19 @@
 
     /* Game Over */
     .goTop{ display:grid; gap:10px; }
+
+    /* ✅ foto más pequeña */
     .goImg{
       width:100%;
-      height: 200px;
+      height: 140px;
       border-radius: 16px;
       overflow:hidden;
       border: 2px solid rgba(0,0,0,.12);
       background: rgba(0,0,0,.06);
     }
     .goImg img{ width:100%; height:100%; object-fit: cover; display:block; }
+
+    /* ✅ textos más pequeños */
     .goTitle{
       text-align:center;
       font-weight: 1000;
@@ -330,38 +339,45 @@
       text-transform: uppercase;
       color: rgba(0,0,0,.78);
       margin: 0;
-      font-size: 18px;
+      font-size: 16px;
     }
     .goPhrase{
       margin: 0;
       text-align:center;
       font-weight: 900;
       color: rgba(0,0,0,.70);
-      font-size: 13px;
+      font-size: 12px;
       line-height: 1.25;
     }
     .nameRow{ display:flex; gap:10px; align-items:center; }
     .nameRow input{
       width:100%;
-      padding: 12px 12px;
+      padding: 10px 10px;
       border-radius: 14px;
       border: 2px solid rgba(0,0,0,.12);
       outline:none;
       font-weight: 900;
-      font-size: 14px;
+      font-size: 13px;
     }
     .smallNote{
       margin: 0;
-      font-size: 12px;
+      font-size: 11px;
       color: rgba(0,0,0,.55);
       text-align:center;
       font-weight: 800;
     }
+
+    /* ✅ botones del gameover más pequeños */
     .goBtns{
       display:grid;
       grid-template-columns: 1fr 1fr 1fr;
-      gap:10px;
-      margin-top: 8px;
+      gap:8px;
+      margin-top: 6px;
+    }
+    .goBtns button{
+      padding: 10px 10px;
+      font-size: 12px;
+      border-radius: 14px;
     }
   </style>
 </head>
@@ -379,12 +395,26 @@
             <div class="title">PORKY A PALACIO</div>
             <p class="sub">Atrapa la R celeste 🐷🪽</p>
           </div>
+
           <div></div>
+
           <div class="menuFooter">
             <div class="btnRow">
               <button id="btnPlay" class="primary">Jugar</button>
               <button id="btnOptions" class="ghost">Opciones</button>
             </div>
+
+            <!-- ✅ crédito en el menú principal -->
+            <div style="
+              text-align:center;
+              font-size:11px;
+              font-weight:800;
+              letter-spacing:.14em;
+              color:rgba(255,255,255,.80);
+              text-shadow: 0 2px 0 rgba(0,0,0,.22);
+              margin-top:4px;
+              user-select:none;
+            ">CREADO POR KDS</div>
           </div>
         </div>
       </section>
@@ -424,7 +454,7 @@
           </div>
 
           <div class="recordsBox">
-            <h3>Records</h3>
+            <h3>TOP 3</h3>
             <ul id="recordsListOptions" class="list"></ul>
             <div id="recordsEmptyOptions" style="display:none; text-align:center; font-weight:900; color:rgba(0,0,0,.55);">
               Aún no hay records.
@@ -436,7 +466,6 @@
             <button id="btnCloseOptions" class="primary">Volver</button>
           </div>
 
-          <!-- FIRMA -->
           <p style="
             margin-top:10px;
             text-align:center;
@@ -467,7 +496,7 @@
             </div>
 
             <div class="recordsBox">
-              <h3>Records</h3>
+              <h3>TOP 3</h3>
               <ul id="recordsListOver" class="list"></ul>
               <div id="recordsEmptyOver" style="display:none; text-align:center; font-weight:900; color:rgba(0,0,0,.55);">
                 Aún no hay records.
@@ -497,31 +526,38 @@
 ========================= */
 const BASE_W = 360;
 const BASE_H = 640;
-const BANNER_H = 92;
+const BANNER_H = 70;           // ✅ más pequeño
 const PLAY_H = BASE_H - BANNER_H;
 const GROUND_H = 92;
 const GROUND_Y = PLAY_H - GROUND_H;
 
-/* DOM */
+/* =========================
+   DOM
+========================= */
 const screenMenu = document.getElementById("screenMenu");
 const screenGame = document.getElementById("screenGame");
+
 const btnPlay = document.getElementById("btnPlay");
 const btnOptions = document.getElementById("btnOptions");
 const btnGear = document.getElementById("btnGear");
+
 const optionsOverlay = document.getElementById("optionsOverlay");
 const btnCloseOptions = document.getElementById("btnCloseOptions");
+
 const btnResetRecords = document.getElementById("btnResetRecords");
 const recordsListOptions = document.getElementById("recordsListOptions");
 const recordsEmptyOptions = document.getElementById("recordsEmptyOptions");
+
 const uiScore = document.getElementById("uiScore");
 const uiR = document.getElementById("uiR");
 const uiStage = document.getElementById("uiStage");
+
 const btnMusicOff = document.getElementById("btnMusicOff");
 const btnMusicOn  = document.getElementById("btnMusicOn");
 const btnSfxOff   = document.getElementById("btnSfxOff");
 const btnSfxOn    = document.getElementById("btnSfxOn");
 
-/* Game over */
+/* Game over UI */
 const gameOverOverlay = document.getElementById("gameOverOverlay");
 const goPhrase = document.getElementById("goPhrase");
 const goScore = document.getElementById("goScore");
@@ -533,10 +569,13 @@ const btnMenu = document.getElementById("btnMenu");
 const recordsListOver = document.getElementById("recordsListOver");
 const recordsEmptyOver = document.getElementById("recordsEmptyOver");
 
-/* Canvas */
+/* =========================
+   Canvas
+========================= */
 const menuCanvas = document.getElementById("menuCanvas");
 const mctx = menuCanvas.getContext("2d");
 mctx.imageSmoothingEnabled = false;
+
 const gameCanvas = document.getElementById("gameCanvas");
 const ctx = gameCanvas.getContext("2d");
 ctx.imageSmoothingEnabled = false;
@@ -549,11 +588,16 @@ function fitCanvasToPhone(c){
   g.setTransform(dpr,0,0,dpr,0,0);
   g.imageSmoothingEnabled = false;
 }
-function fitAll(){ fitCanvasToPhone(menuCanvas); fitCanvasToPhone(gameCanvas); }
+function fitAll(){
+  fitCanvasToPhone(menuCanvas);
+  fitCanvasToPhone(gameCanvas);
+}
 window.addEventListener("resize", fitAll);
 fitAll();
 
-/* Helpers */
+/* =========================
+   Helpers
+========================= */
 function getCss(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
 function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
 function rect(g, x,y,w,h, fill, stroke){
@@ -567,7 +611,9 @@ function rect(g, x,y,w,h, fill, stroke){
   }
 }
 
-/* Player name */
+/* =========================
+   Player name
+========================= */
 const PLAYER_KEY = "porky_player_name_v2";
 function getPlayerName(){ return (localStorage.getItem(PLAYER_KEY) || "").trim(); }
 function setPlayerName(n){
@@ -578,7 +624,9 @@ function setPlayerName(n){
 nameInput.value = getPlayerName();
 nameInput.addEventListener("input", ()=> setPlayerName(nameInput.value));
 
-/* Records */
+/* =========================
+   Records (TOP 3)
+========================= */
 const STORAGE_KEY = "porky_records_v3";
 function loadRecords(){
   try{
@@ -587,7 +635,9 @@ function loadRecords(){
     return Array.isArray(arr) ? arr : [];
   }catch{ return []; }
 }
-function saveRecords(records){ localStorage.setItem(STORAGE_KEY, JSON.stringify(records.slice(0,10))); }
+function saveRecords(records){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(records.slice(0,10)));
+}
 function addRecord(score, rCount, name){
   const stamp = new Date().toLocaleString("es-PE", { hour12:false });
   const r = loadRecords();
@@ -596,19 +646,27 @@ function addRecord(score, rCount, name){
   saveRecords(r);
 }
 function resetRecords(){ localStorage.removeItem(STORAGE_KEY); }
+
+/* ✅ SOLO TOP 3 EN PANTALLAS */
 function renderRecords(listEl, emptyEl){
-  const r = loadRecords();
+  const all = loadRecords();
+  const r = all.slice(0,3);
+
   listEl.innerHTML = "";
   if(!r.length){ emptyEl.style.display = "block"; return; }
   emptyEl.style.display = "none";
+
   r.forEach((it, i)=>{
+    const medal = (i===0?"🥇": i===1?"🥈":"🥉");
     const li = document.createElement("li");
-    li.innerHTML = `<span>#${i+1} • ${it.score} pts</span><span style="opacity:.85">${(it.name||"Anónimo")}</span>`;
+    li.innerHTML = `<span>${medal} ${it.score} pts</span><span style="opacity:.85">${(it.name||"Anónimo")}</span>`;
     listEl.appendChild(li);
   });
 }
 
-/* Phrases */
+/* =========================
+   Phrases
+========================= */
 const frases = [
   "No te rindas. El siguiente intento puede ser el mejor.",
   "Respira. Ajusta tu salto. ¡Y vuelve a intentarlo!",
@@ -619,11 +677,15 @@ const frases = [
   "No es derrota: es práctica con estilo.",
   "Tú puedes. Enfócate en el ritmo.",
   "El éxito está después del intento que casi abandonas.",
-  "Un salto a la vez. Vamos de nuevo."
+  "Un salto a la vez. Vamos de nuevo.",
+  "No te detengas. Estás más cerca de lo que crees.",
+  "La R te espera. ¡Inténtalo otra vez!"
 ];
 const pickPhrase = ()=> frases[(Math.random()*frases.length)|0];
 
-/* Audio (original chiptune) */
+/* =========================
+   Audio (chiptune original)
+========================= */
 const music = {
   enabled: true,
   sfxEnabled: true,
@@ -684,10 +746,12 @@ const music = {
       const freq = base * Math.pow(2, semis/12);
 
       this.beep(freq, 0.07, 0.28, "square");
+
       if(this.mode === "menu" && this.step % 4 === 0){
         this.beep(freq/2, 0.06, 0.16, "triangle");
         this.beep(freq*2, 0.04, 0.10, "square");
       }
+
       if(this.step % 8 === 0) this.beep(base/2, 0.08, 0.10, "triangle");
 
       this.step++;
@@ -734,7 +798,9 @@ window.addEventListener("pointerdown", unlockAudioOnce, { passive:true });
 function playMenuMusic(){ music.setMode("menu"); music.ensureStartedIfEnabled(); }
 function playGameMusic(){ music.setMode("game"); music.ensureStartedIfEnabled(); }
 
-/* Opciones overlay */
+/* =========================
+   Opciones Overlay
+========================= */
 function setToggleStyles(){
   btnMusicOn.classList.toggle("on", music.enabled);
   btnMusicOff.classList.toggle("on", !music.enabled);
@@ -772,7 +838,7 @@ btnResetRecords.addEventListener("click", ()=>{
 });
 
 /* =========================
-   MENU: ahora usa ESTACION (no cerros)
+   MENU animation (CERROS + casitas)
 ========================= */
 let menuRunning = true;
 let menuStart = performance.now();
@@ -791,12 +857,12 @@ function drawMenuPorky(g, x,y,t, s){
   rect(g, x+24*s, y+5*s, 2*s, 2*s, "rgba(0,0,0,.85)");
   rect(g, x+28*s, y+7*s, 8*s, 6*s, "#ff99b5", "rgba(0,0,0,.18)");
 
-  const flap = Math.sin(t*18)*3*s;
-  // alas mas pequeñas en menu
+  // alas más pequeñas
+  const flap = Math.sin(t*18)*2*s;
   rect(g, x+10*s,  y+5*s, 10*s, 6*s, "rgba(255,255,255,.85)", "rgba(0,0,0,.14)");
   rect(g, x+10*s,  y+11*s+flap, 8*s, 4*s, "rgba(255,255,255,.65)", "rgba(0,0,0,.14)");
 
-  // patas + cola (menu)
+  // 4 patas + colita
   rect(g, x+3*s, y+16*s, 4*s, 4*s, "#e88aa8");
   rect(g, x+9*s, y+16*s, 4*s, 4*s, "#e88aa8");
   rect(g, x+17*s,y+16*s, 4*s, 4*s, "#e88aa8");
@@ -810,6 +876,139 @@ function drawCloudBlock(g, x,y){
   rect(g,x+10, y-8, 40, 10, "rgba(255,255,255,.85)");
   rect(g,x+20, y+8, 36, 10, "rgba(255,255,255,.70)");
   rect(g,x+42, y, 26, 10, "rgba(255,255,255,.85)");
+}
+
+function drawBrownHillsParallax(g, camX){
+  const farX  = -((camX*0.12) % 420);
+  const midX  = -((camX*0.28) % 420);
+  const nearX = -((camX*0.45) % 420);
+
+  rect(g,0,0,BASE_W,PLAY_H,"rgba(255,255,255,.03)");
+  drawCloudBlock(g, 30 + (camX*0.10 % 420), 90);
+  drawCloudBlock(g, 180 + (camX*0.07 % 520), 150);
+  drawCloudBlock(g, 260 - (camX*0.09 % 520), 70);
+
+  for(let i=0;i<3;i++){
+    const x = farX + i*420;
+    g.fillStyle = "rgba(170,120,80,.22)";
+    g.beginPath();
+    g.moveTo(x, 420);
+    g.quadraticCurveTo(x+120, 300, x+240, 420);
+    g.quadraticCurveTo(x+330, 510, x+420, 390);
+    g.lineTo(x+420, GROUND_Y);
+    g.lineTo(x, GROUND_Y);
+    g.closePath(); g.fill();
+  }
+
+  for(let i=0;i<3;i++){
+    const x = midX + i*420;
+    g.fillStyle = "rgba(155,95,55,.32)";
+    g.beginPath();
+    g.moveTo(x, 470);
+    g.quadraticCurveTo(x+100, 340, x+220, 460);
+    g.quadraticCurveTo(x+320, 560, x+420, 420);
+    g.lineTo(x+420, GROUND_Y);
+    g.lineTo(x, GROUND_Y);
+    g.closePath(); g.fill();
+  }
+
+  for(let i=0;i<3;i++){
+    const x = nearX + i*420;
+    g.fillStyle = "rgba(120,70,40,.40)";
+    g.beginPath();
+    g.moveTo(x, 520);
+    g.quadraticCurveTo(x+120, 380, x+240, 520);
+    g.quadraticCurveTo(x+320, 610, x+420, 480);
+    g.lineTo(x+420, GROUND_Y);
+    g.lineTo(x, GROUND_Y);
+    g.closePath(); g.fill();
+
+    const colors = ["#ff5a5a","#ffd166","#4cc9f0","#80ed99","#b5179e","#f77f00","#f72585","#4361ee"];
+    const houses = [
+      {dx: 60,  y: 440, c:colors[0]},
+      {dx: 92,  y: 418, c:colors[1]},
+      {dx: 128, y: 436, c:colors[2]},
+      {dx: 164, y: 412, c:colors[3]},
+      {dx: 205, y: 442, c:colors[4]},
+      {dx: 242, y: 420, c:colors[5]},
+      {dx: 280, y: 438, c:colors[6]},
+      {dx: 320, y: 416, c:colors[7]},
+    ];
+    for(const h of houses){
+      const hx = x + h.dx;
+      rect(g,hx, h.y, 18, 16, h.c, "rgba(0,0,0,.18)");
+      rect(g,hx-2, h.y-6, 22, 6, "rgba(0,0,0,.25)", "rgba(0,0,0,.18)");
+    }
+  }
+}
+
+function drawMenuFrame(){
+  if(!menuRunning) return;
+  const t = (performance.now() - menuStart)/1000;
+  const camX = t * 220;
+
+  mctx.clearRect(0,0,BASE_W,BASE_H);
+
+  /* ✅ MENÚ = CERROS + casitas */
+  drawBrownHillsParallax(mctx, camX*0.8);
+
+  const rScale = 6;
+  const rxCenter = (BASE_W/2) - (22*rScale)/2;
+  const ryCenter = (BASE_H/2) - (22*rScale)/2 - 70;
+  const bobX = Math.sin(t*1.1) * 2;
+  const bobY = Math.sin(t*1.4) * 2;
+  drawMenuR(mctx, rxCenter + bobX, ryCenter + bobY, rScale);
+
+  const pScale = 6;
+  const pigW = 28*pScale;
+  const px = (BASE_W/2) - pigW/2 - 36;
+  const py = (ryCenter + bobY) + (22*rScale) - 12;
+  drawMenuPorky(mctx, px + Math.sin(t*1.3)*2, py + Math.sin(t*1.8)*2, t, pScale);
+
+  requestAnimationFrame(drawMenuFrame);
+}
+function startMenu(){
+  menuRunning = true;
+  menuStart = performance.now();
+  playMenuMusic();
+  requestAnimationFrame(drawMenuFrame);
+}
+function stopMenu(){ menuRunning = false; }
+
+/* =========================
+   Fondos juego: cerro / machu / tren / selva
+========================= */
+function drawMachuParallax(g, camX){
+  const farX  = -((camX*0.10) % 420);
+  const midX  = -((camX*0.22) % 420);
+
+  rect(g,0,0,BASE_W,PLAY_H,"rgba(255,255,255,.03)");
+  drawCloudBlock(g, 40 + (camX*0.09 % 420), 95);
+  drawCloudBlock(g, 220 - (camX*0.07 % 520), 75);
+
+  for(let i=0;i<3;i++){
+    const x = farX + i*420;
+    g.fillStyle = "rgba(35,140,70,.22)";
+    g.beginPath();
+    g.moveTo(x, 420);
+    g.quadraticCurveTo(x+110, 250, x+210, 420);
+    g.quadraticCurveTo(x+300, 560, x+420, 320);
+    g.lineTo(x+420, GROUND_Y);
+    g.lineTo(x, GROUND_Y);
+    g.closePath(); g.fill();
+  }
+
+  for(let i=0;i<3;i++){
+    const x = midX + i*420;
+    g.fillStyle = "rgba(25,150,70,.30)";
+    g.beginPath();
+    g.moveTo(x, 500);
+    g.quadraticCurveTo(x+140, 260, x+240, 500);
+    g.quadraticCurveTo(x+300, 640, x+420, 380);
+    g.lineTo(x+420, GROUND_Y);
+    g.lineTo(x, GROUND_Y);
+    g.closePath(); g.fill();
+  }
 }
 
 function drawTrainParallax(g, camX){
@@ -854,131 +1053,21 @@ function drawTrainParallax(g, camX){
     }
   }
 
-  // TRENES VISIBLES en movimiento (saliendo)
-  const trainX = BASE_W - ((camX*1.2) % (BASE_W+220));
+  /* ✅ tren va de izquierda a derecha (no retrocede) */
+  const trainX = -220 + ((camX*1.2) % (BASE_W+220));
   const trainY = GROUND_Y - 44;
 
-  // locomotora
   rect(g, trainX, trainY, 48, 24, "#444", "rgba(0,0,0,.2)");
   rect(g, trainX+10, trainY-10, 22, 10, "#666", "rgba(0,0,0,.2)");
   rect(g, trainX+34, trainY+6, 10, 10, "rgba(255,255,255,.25)", "rgba(0,0,0,.12)");
 
-  // vagones
   for(let i=1;i<=3;i++){
-    rect(g, trainX - i*52, trainY, 46, 22, "#888", "rgba(0,0,0,.2)");
-    rect(g, trainX - i*52 + 8, trainY+6, 12, 10, "rgba(255,255,255,.20)", "rgba(0,0,0,.10)");
-    rect(g, trainX - i*52 + 26, trainY+6, 12, 10, "rgba(255,255,255,.20)", "rgba(0,0,0,.10)");
+    rect(g, trainX + i*52, trainY, 46, 22, "#888", "rgba(0,0,0,.2)");
+    rect(g, trainX + i*52 + 8,  trainY+6, 12, 10, "rgba(255,255,255,.20)", "rgba(0,0,0,.10)");
+    rect(g, trainX + i*52 + 26, trainY+6, 12, 10, "rgba(255,255,255,.20)", "rgba(0,0,0,.10)");
   }
 }
 
-function drawMenuFrame(){
-  if(!menuRunning) return;
-  const t = (performance.now() - menuStart)/1000;
-  const camX = t * 220;
-
-  mctx.clearRect(0,0,BASE_W,BASE_H);
-
-  // MENU FONDO = ESTACION (no cerros)
-  drawTrainParallax(mctx, camX*0.8);
-
-  // R centrada y subida
-  const rScale = 6;
-  const rxCenter = (BASE_W/2) - (22*rScale)/2;
-  const ryCenter = (BASE_H/2) - (22*rScale)/2 - 70;
-  const bobX = Math.sin(t*1.1) * 2;
-  const bobY = Math.sin(t*1.4) * 2;
-  const rx = rxCenter + bobX;
-  const ry = ryCenter + bobY;
-  drawMenuR(mctx, rx, ry, rScale);
-
-  // cerdito centrado debajo
-  const pScale = 6;
-  const pigW = 28*pScale;
-  const px = (BASE_W/2) - pigW/2 - 36;
-  const py = ry + (22*rScale) - 12;
-  drawMenuPorky(mctx, px + Math.sin(t*1.3)*2, py + Math.sin(t*1.8)*2, t, pScale);
-
-  requestAnimationFrame(drawMenuFrame);
-}
-function startMenu(){ menuRunning = true; menuStart = performance.now(); playMenuMusic(); requestAnimationFrame(drawMenuFrame); }
-function stopMenu(){ menuRunning = false; }
-
-/* =========================
-   Otros fondos para el juego (sin cambios)
-========================= */
-function drawBrownHillsParallax(g, camX){
-  const farX  = -((camX*0.12) % 420);
-  const midX  = -((camX*0.28) % 420);
-  const nearX = -((camX*0.45) % 420);
-
-  rect(g,0,0,BASE_W,PLAY_H,"rgba(255,255,255,.03)");
-  drawCloudBlock(g, 30 + (camX*0.10 % 420), 90);
-  drawCloudBlock(g, 180 + (camX*0.07 % 520), 150);
-
-  for(let i=0;i<3;i++){
-    const x = farX + i*420;
-    g.fillStyle = "rgba(170,120,80,.22)";
-    g.beginPath();
-    g.moveTo(x, 420);
-    g.quadraticCurveTo(x+120, 300, x+240, 420);
-    g.quadraticCurveTo(x+330, 510, x+420, 390);
-    g.lineTo(x+420, GROUND_Y);
-    g.lineTo(x, GROUND_Y);
-    g.closePath(); g.fill();
-  }
-  for(let i=0;i<3;i++){
-    const x = midX + i*420;
-    g.fillStyle = "rgba(155,95,55,.32)";
-    g.beginPath();
-    g.moveTo(x, 470);
-    g.quadraticCurveTo(x+100, 340, x+220, 460);
-    g.quadraticCurveTo(x+320, 560, x+420, 420);
-    g.lineTo(x+420, GROUND_Y);
-    g.lineTo(x, GROUND_Y);
-    g.closePath(); g.fill();
-  }
-  for(let i=0;i<3;i++){
-    const x = nearX + i*420;
-    g.fillStyle = "rgba(120,70,40,.40)";
-    g.beginPath();
-    g.moveTo(x, 520);
-    g.quadraticCurveTo(x+120, 380, x+240, 520);
-    g.quadraticCurveTo(x+320, 610, x+420, 480);
-    g.lineTo(x+420, GROUND_Y);
-    g.lineTo(x, GROUND_Y);
-    g.closePath(); g.fill();
-  }
-}
-function drawMachuParallax(g, camX){
-  const farX  = -((camX*0.10) % 420);
-  const midX  = -((camX*0.22) % 420);
-
-  rect(g,0,0,BASE_W,PLAY_H,"rgba(255,255,255,.03)");
-  drawCloudBlock(g, 40 + (camX*0.09 % 420), 95);
-
-  for(let i=0;i<3;i++){
-    const x = farX + i*420;
-    g.fillStyle = "rgba(35,140,70,.22)";
-    g.beginPath();
-    g.moveTo(x, 420);
-    g.quadraticCurveTo(x+110, 250, x+210, 420);
-    g.quadraticCurveTo(x+300, 560, x+420, 320);
-    g.lineTo(x+420, GROUND_Y);
-    g.lineTo(x, GROUND_Y);
-    g.closePath(); g.fill();
-  }
-  for(let i=0;i<3;i++){
-    const x = midX + i*420;
-    g.fillStyle = "rgba(25,150,70,.30)";
-    g.beginPath();
-    g.moveTo(x, 500);
-    g.quadraticCurveTo(x+140, 260, x+240, 500);
-    g.quadraticCurveTo(x+300, 640, x+420, 380);
-    g.lineTo(x+420, GROUND_Y);
-    g.lineTo(x, GROUND_Y);
-    g.closePath(); g.fill();
-  }
-}
 function drawJungleParallax(g, camX){
   const farX  = -((camX*0.10) % 420);
   const midX  = -((camX*0.22) % 420);
@@ -994,6 +1083,7 @@ function drawJungleParallax(g, camX){
       rect(g, x+20+t*50, 230, 38, 40, "rgba(50,170,90,.18)");
     }
   }
+
   for(let i=0;i<3;i++){
     const x = midX + i*420;
     for(let p=0;p<6;p++){
@@ -1004,13 +1094,13 @@ function drawJungleParallax(g, camX){
   }
 }
 
+/* fondos duran MÁS */
 const STAGES = [
-  { name:"TREN",  draw: drawTrainParallax },  // empieza en estación
   { name:"CERRO", draw: drawBrownHillsParallax },
   { name:"MACHU", draw: drawMachuParallax },
+  { name:"TREN",  draw: drawTrainParallax },
   { name:"SELVA", draw: drawJungleParallax },
 ];
-
 const STAGE_LEN = 3600;
 
 function drawStageBlend(g, dist, camX){
@@ -1034,41 +1124,41 @@ function drawGround(g){
   g.fillRect(0, GROUND_Y, BASE_W, 4);
 }
 
-/* Pipes */
+/* =========================
+   Pipes + Porky + Token
+========================= */
 function drawPipe(g, x, gapY, gapH){
   const pipeW = 62;
   const capH = 16;
   rect(g,x, 0, pipeW, gapY, getCss("--pipe"), getCss("--pipeEdge"));
   rect(g,x-3, gapY-capH, pipeW+6, capH, getCss("--pipeDark"), getCss("--pipeEdge"));
+
   const bottomY = gapY + gapH;
   rect(g,x, bottomY, pipeW, GROUND_Y - bottomY, getCss("--pipe"), getCss("--pipeEdge"));
   rect(g,x-3, bottomY, pipeW+6, capH, getCss("--pipeDark"), getCss("--pipeEdge"));
 }
 
-/* Cerdito en juego: alas mas pequeñas + 4 patas + colita */
+/* cerdito: alas pequeñas + 4 patas + colita */
 function drawPorkyGame(g, x,y, t){
   rect(g,x, y, 26, 18, "#ffb6c8", "rgba(0,0,0,.18)");
   rect(g,x+18, y+2, 16, 14, "#ffa9bf", "rgba(0,0,0,.18)");
+
   rect(g,x+24, y+5, 2, 2, "rgba(0,0,0,.85)");
   rect(g,x+28, y+7, 8, 6, "#ff99b5", "rgba(0,0,0,.18)");
 
-  // patas (4)
   rect(g,x+2,  y+16, 4, 4, "#e88aa8");
   rect(g,x+8,  y+16, 4, 4, "#e88aa8");
   rect(g,x+16, y+16, 4, 4, "#e88aa8");
   rect(g,x+22, y+16, 4, 4, "#e88aa8");
 
-  // colita
   rect(g,x-4, y+10, 4, 4, "#ff99b5");
   rect(g,x-6, y+12, 4, 4, "#ff99b5");
 
-  // alas mas pequeñas
   const flap = Math.sin(t*16)*2;
   rect(g, x+10, y+5, 10, 6, "rgba(255,255,255,.85)", "rgba(0,0,0,.14)");
   rect(g, x+10, y+11+flap, 8, 4, "rgba(255,255,255,.65)", "rgba(0,0,0,.14)");
 }
 
-/* Token R */
 const TOKEN_SIZE = 28;
 function drawRToken(g, x,y){
   rect(g,x,y,TOKEN_SIZE,TOKEN_SIZE,"rgba(255,255,255,.95)","rgba(0,0,0,.20)");
@@ -1079,7 +1169,9 @@ function drawRToken(g, x,y){
   g.fillText("R", x+TOKEN_SIZE/2, y+TOKEN_SIZE/2+1);
 }
 
-/* Game core */
+/* =========================
+   Game core
+========================= */
 const game = {
   running:false,
   pausedByOverlay:false,
@@ -1132,6 +1224,7 @@ const game = {
 
   jumpAction(){
     if(!this.running || this.pausedByOverlay || this.state === "over") return;
+
     music.ensureCtx();
     if(music.ctx && music.ctx.state === "suspended") music.ctx.resume();
     music.sfxJump();
@@ -1247,9 +1340,12 @@ const game = {
 
   draw(){
     ctx.clearRect(0,0,BASE_W,BASE_H);
+
     drawStageBlend(ctx, this.distance, this.camX);
+
     for(const p of this.pipes) drawPipe(ctx, p.x, p.gapY, p.gapH);
     for(const tok of this.tokens) if(tok.alive) drawRToken(ctx, tok.x, tok.y);
+
     drawGround(ctx);
     drawPorkyGame(ctx, this.pig.x, this.pig.y, this.t);
   },
@@ -1258,13 +1354,17 @@ const game = {
     if(!this.running) return;
     const dt = clamp((now - this.last)/1000, 0, 0.033);
     this.last = now;
+
     if(!this.pausedByOverlay && this.state !== "over") this.update(dt);
     this.draw();
+
     requestAnimationFrame(this.loop.bind(this));
   }
 };
 
-/* Game Over UI */
+/* =========================
+   Game Over UI
+========================= */
 function showGameOverUI(){
   game.pausedByOverlay = true;
   goPhrase.textContent = game.phrase || pickPhrase();
@@ -1300,7 +1400,9 @@ btnMenu.addEventListener("click", ()=>{
   showScreen("menu");
 });
 
-/* Navigation */
+/* =========================
+   Navigation
+========================= */
 function showScreen(which){
   closeAllOverlays();
   if(which === "menu"){
@@ -1315,7 +1417,9 @@ function showScreen(which){
   }
 }
 
-/* Game start/stop */
+/* =========================
+   Game start/stop
+========================= */
 function startGame(){
   showScreen("game");
   game.startNew();
@@ -1323,7 +1427,9 @@ function startGame(){
 }
 function stopGame(){ game.running = false; }
 
-/* Tap */
+/* =========================
+   Tap to play
+========================= */
 gameCanvas.addEventListener("pointerdown", (e)=>{
   if(optionsOverlay.classList.contains("active")) return;
   if(gameOverOverlay.classList.contains("active")) return;
@@ -1331,10 +1437,14 @@ gameCanvas.addEventListener("pointerdown", (e)=>{
   game.jumpAction();
 },{ passive:false });
 
-/* Buttons */
+/* =========================
+   Buttons
+========================= */
 btnPlay.addEventListener("click", (e)=>{ e.preventDefault(); startGame(); });
 
-/* Init */
+/* =========================
+   Init
+========================= */
 startMenu();
 </script>
 </body>
