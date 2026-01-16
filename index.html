@@ -26,7 +26,7 @@
 
     *{ box-sizing:border-box; }
     html,body{
-      height:100%; /* ✅ CAMBIO: 100% para asegurar que el viewport sea consistente */
+      height:100%;
       margin:0;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       background: linear-gradient(180deg, var(--sky) 0%, var(--sky2) 100%);
@@ -46,11 +46,11 @@
 
     /* 9:16, pero cabe en web móvil */
     .phone{
-      height:100dvh; /* ✅ CAMBIO: Usar 100dvh para la altura del phone */
+      height:100dvh; /* Usar 100dvh para la altura del phone */
       aspect-ratio: 9 / 16;
       width:auto;
       max-width:100vw;
-      max-height: 100dvh; /* ✅ CAMBIO: Asegurar que no exceda el viewport dinámico */
+      max-height: 100dvh; /* Asegurar que no exceda el viewport dinámico */
       border-radius: 0;
       overflow:hidden;
       border: 2px solid var(--rCyan);
@@ -63,11 +63,11 @@
     .screen{ position:absolute; inset:0; display:none; }
     .screen.active{ display:block; }
 
-    /* ✅ Banner fijo, subido (casi encima del piso) */
+    /* ✅ Banner fijo, subido un poco más */
     .bannerBar{
       position:absolute;
       left:0; right:0;
-      bottom: 86px;              /* ✅ MÁS ARRIBA, casi encima del piso */
+      bottom: 15px; /* ✅ CAMBIO: Subido a 15px del borde inferior */
       height: var(--bannerH);
       z-index: 50;
       background: rgba(255,255,255,.15);
@@ -103,7 +103,8 @@
       padding: 14px;
 
       /* ✅ ahora reservamos espacio del banner subido */
-      padding-bottom: calc(var(--bannerH) + 110px); /* Ajuste basado en bannerH */
+      /* Ajuste el padding-bottom para el nuevo bottom del banner */
+      padding-bottom: calc(var(--bannerH) + 25px); /* ✅ CAMBIO: Ajuste para el nuevo bottom del banner */
       pointer-events:none;
       z-index: 5;
     }
@@ -218,13 +219,13 @@
     }
     .gearBtn:active{ transform: scale(.98); }
 
-    /* Overlay */
+    /* Overlay (Ventana Game Over y Opciones) */
     .overlay{
       position:absolute;
       inset:0;
       background: rgba(0,0,0,.35);
       display:none;
-      align-items:center;
+      align-items: flex-start; /* ✅ CAMBIO: Para alinear los paneles arriba */
       justify-content:center;
       padding: 14px;
       z-index: 30;
@@ -239,6 +240,7 @@
       border-radius: 18px;
       padding: 12px;
       box-shadow: 0 18px 50px rgba(0,0,0,.25);
+      margin-top: 20px; /* ✅ CAMBIO: Mover el panel 20px desde arriba */
     }
     .panel h2{
       margin: 0 0 8px 0;
@@ -525,7 +527,7 @@ const BASE_W = 360;
 const BASE_H = 640;
 const BANNER_H = 70;
 const PLAY_H = BASE_H - BANNER_H;
-const GROUND_H = 70;  // ✅ piso un poco más delgado (era 78)
+const GROUND_H = 70;  // piso un poco más delgado
 const GROUND_Y = PLAY_H - GROUND_H;
 
 const screenMenu = document.getElementById("screenMenu");
@@ -614,14 +616,22 @@ const STORAGE_KEY = "porky_records_v3";
 function loadRecords(){
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
-    const arr = raw ? JSON.parse(raw) : [];
-    return Array.isArray(arr) ? arr : [];
+    let arr = raw ? JSON.parse(raw) : [];
+    if(!Array.isArray(arr)) arr = [];
+
+    // ✅ CAMBIO: Añadir a Rafael López Aliaga si no hay récords
+    if (arr.length === 0) {
+      const initialRecord = { score: 100, rCount: 5, name: "Rafael López Aliaga", stamp: new Date().toLocaleString("es-PE", { hour12:false }) };
+      arr.push(initialRecord);
+      saveRecords(arr); // Guardar el récord inicial
+    }
+    return arr;
   }catch{ return []; }
 }
 function saveRecords(records){ localStorage.setItem(STORAGE_KEY, JSON.stringify(records.slice(0,10))); }
 function addRecord(score, rCount, name){
   const stamp = new Date().toLocaleString("es-PE", { hour12:false });
-  const r = loadRecords();
+  const r = loadRecords(); // Carga también el récord inicial si es el caso
   r.push({ score, rCount, name: name || "Anónimo", stamp });
   r.sort((a,b)=> b.score - a.score);
   saveRecords(r);
@@ -1113,9 +1123,8 @@ gameCanvas.addEventListener("pointerdown",(e)=>{
 btnPlay.addEventListener("click",(e)=>{e.preventDefault(); startGame();});
 
 /* INIT */
-// ✅ Envuelve la inicialización en un DOMContentLoaded para asegurar que todo esté listo
 document.addEventListener("DOMContentLoaded", () => {
-  fitAll(); // Asegurarse de que las canvas se dimensionen correctamente
+  fitAll();
   startMenu();
 });
 </script>
