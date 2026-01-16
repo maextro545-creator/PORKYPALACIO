@@ -3,1449 +3,678 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
-  <title>PORKY A PALACIO</title>
+  <title>Porky a Palacio</title>
   <style>
     :root{
-      --sky:#70c5ce;
-      --sky2:#5fb8c1;
-
-      --pipe:#4ec04e;
-      --pipeDark:#3aa43a;
-      --pipeEdge:#2f7f2f;
-
-      --ground:#e0de8a;
-      --dirt:#d9a05a;
-      --dirt2:#c98944;
-
-      --panel: rgba(255,255,255,.94);
-      --panelStroke: rgba(0,0,0,.20);
-
-      --rCyan:#2bd3ff;
-      --bannerH: 70px; /* ✅ más pequeño para que entre todo */
+      --bannerH: 120px;        /* ALTURA DEL BANNER (ajústala a tu publicidad real) */
+      --maxW: 420px;
+      --ui: rgba(255,255,255,.92);
+      --shadow: 0 18px 60px rgba(0,0,0,.28);
     }
 
-    *{ box-sizing:border-box; }
     html,body{
+      margin:0; padding:0;
       height:100%;
-      margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: linear-gradient(180deg, var(--sky) 0%, var(--sky2) 100%);
+      background:#0b2a5a;
       overflow:hidden;
-      touch-action: manipulation;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       -webkit-tap-highlight-color: transparent;
     }
-    .pixel{ image-rendering: pixelated; image-rendering: crisp-edges; }
 
-    /* ✅ Full mobile browser */
-    .app{
-      height:100vh;
-      width:100vw;
-      display:grid;
-      place-items:center;
-      padding: 0;
+    /* Anti “barra del navegador deforma”: usamos dvh/svh si existe + fallback con --vh */
+    body{
+      height: 100vh;
+      height: 100svh;
+      height: 100dvh;
+      display:flex;
+      flex-direction:column;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+      background: radial-gradient(1200px 900px at 50% 0%, #1760b8 0%, #0b2a5a 55%, #071a38 100%);
     }
 
-    /* ✅ mantiene 9:16 sin deformar: ocupa toda la altura y se ajusta al ancho si es necesario */
-    .phone{
-      height:100vh;
-      aspect-ratio: 9 / 16;
-      width:auto;
-      max-width:100vw;
+    .game-wrap{
+      flex:1;
+      display:flex;
+      justify-content:center;
+      align-items:flex-start; /* SUBE TODO */
+      padding-top: 8px;       /* usa espacio vacío de arriba */
+      box-sizing:border-box;
+    }
 
-      border-radius: 0;
-      overflow:hidden;
-      border: 2px solid var(--rCyan);
-      box-shadow: none;
-      background: rgba(255,255,255,.06);
-      backdrop-filter: blur(6px);
+    .stage{
+      width: min(96vw, var(--maxW));
       position:relative;
     }
 
-    .screen{ position:absolute; inset:0; display:none; }
-    .screen.active{ display:block; }
-
-    /* Banner fijo SIEMPRE */
-    .bannerBar{
+    /* Header pequeño para que no coma pantalla */
+    .topbar{
       position:absolute;
-      left:0; right:0; bottom:0;
-      height: var(--bannerH);
-      z-index: 50;
-      border-top: 2px solid rgba(0,0,0,.12);
-      background: rgba(255,255,255,.15);
-      backdrop-filter: blur(6px);
-      overflow:hidden;
-      pointer-events:none;
-    }
-    .bannerBar img{
-      width:100%;
-      height:100%;
-      object-fit: cover;
-      display:block;
-      filter: saturate(1.05) contrast(1.05);
-    }
-
-    #menuCanvas, #gameCanvas{
-      width:100%;
-      height:100%;
-      display:block;
-      background: transparent;
-    }
-
-    .menuUI{
-      position:absolute;
-      inset:0;
-      display:grid;
-      grid-template-rows: auto 1fr auto;
-      padding: 12px;
-      padding-bottom: calc(12px + var(--bannerH));
-      pointer-events:none;
-      z-index: 5;
-    }
-    .menuHeader{ text-align:center; }
-
-    /* ✅ título grande pero más compacto en móvil */
-    .title{
-      margin: 4px 0 0 0;
-      font-weight: 1000;
-      letter-spacing: .09em;
-      text-transform: uppercase;
-      color: #f4fdff;
-      font-size: clamp(30px, 7.2vw, 56px);
-      text-shadow:
-        0 3px 0 #c9f3ff,
-        0 6px 0 #9fe6ff,
-        0 9px 0 #5fb8ff,
-        0 14px 24px rgba(0,0,0,.38);
-    }
-    .sub{
-      margin: 4px 0 0 0;
-      color: rgba(255,255,255,.97);
-      text-shadow: 0 2px 0 rgba(0,0,0,.18);
-      font-size: 12px;
-      line-height: 1.25;
-      opacity: .95;
-    }
-
-    .menuFooter{
-      display:grid;
-      gap:10px;
-      pointer-events:auto;
-    }
-    .btnRow{ display:grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-
-    button{
-      appearance:none;
-      border:0;
-      border-radius: 16px;
-      padding: 12px 10px;     /* ✅ un poco más pequeño */
-      font-weight: 1000;
-      letter-spacing: .05em;
-      text-transform: uppercase;
-      color: #fff;
-      background: rgba(0,0,0,.16);
-      border: 2px solid rgba(255,255,255,.18);
-      text-shadow: 0 2px 0 rgba(0,0,0,.25);
-      cursor:pointer;
-      user-select:none;
-      font-size: 13px;        /* ✅ más pequeño */
-      backdrop-filter: blur(6px);
-    }
-    button:active{ transform: scale(.98); }
-
-    .primary{
-      background: rgba(78,192,78,.88);
-      border-color: rgba(0,0,0,.10);
-      box-shadow: inset 0 -3px 0 rgba(0,0,0,.18);
-    }
-    .ghost{ background: rgba(255,255,255,.18); }
-    .danger{
-      background: rgba(239,68,68,.78);
-      border-color: rgba(0,0,0,.10);
-      box-shadow: inset 0 -3px 0 rgba(0,0,0,.18);
-    }
-    .btnBlue{
-      background: rgba(95,184,255,.92);
-      border-color: rgba(0,0,0,.10);
-      box-shadow: inset 0 -3px 0 rgba(0,0,0,.18);
-    }
-
-    /* HUD GAME */
-    .hudScore{
-      position:absolute;
-      top: 8px;
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 7px 10px;
-      border-radius: 16px;
-      background: rgba(255,255,255,.35);
-      border: 2px solid rgba(0,0,0,.14);
-      color:#fff;
-      text-shadow: 0 2px 0 rgba(0,0,0,.25);
-      font-weight: 1000;
-      letter-spacing:.03em;
-      font-size: 13px;
-      min-width: 150px;
+      left:0; right:0;
+      top: 6px;
       text-align:center;
-      backdrop-filter: blur(6px);
       pointer-events:none;
-      z-index: 5;
+      z-index:10;
+    }
+    .title{
+      margin:0;
+      font-weight:900;
+      letter-spacing:2px;
+      font-size: clamp(22px, 6vw, 36px);
+      color:#eaf7ff;
+      text-shadow: 0 4px 0 rgba(0,0,0,.28);
+    }
+    .subtitle{
+      margin:4px 0 0;
+      font-size: clamp(11px, 2.8vw, 14px);
+      color: rgba(234,247,255,.9);
+      text-shadow: 0 2px 0 rgba(0,0,0,.22);
     }
 
-    .gearBtn{
-      position:absolute;
-      top: 8px;
-      right: 8px;
-      width: 44px;
-      height: 44px;
-      border-radius: 16px;
-      border: 2px solid rgba(0,0,0,.18);
-      background: rgba(255,255,255,.35);
-      backdrop-filter: blur(6px);
-      display:grid;
-      place-items:center;
-      font-size: 20px;
-      font-weight: 1000;
-      cursor:pointer;
-      user-select:none;
-      z-index: 6;
+    canvas#c{
+      width: 100%;
+      height: auto;
+      display:block;
+      border-radius: 18px 18px 0 0;
+      box-shadow: var(--shadow);
+      background:#7ecfd4;
+      image-rendering: pixelated;
+      touch-action: manipulation;
+      /* MUY IMPORTANTE: reserva espacio al banner para que SIEMPRE se vea */
+      max-height: calc(100dvh - var(--bannerH) - 24px);
+      max-height: calc(var(--vh, 1vh) * 100 - var(--bannerH) - 24px);
     }
-    .gearBtn:active{ transform: scale(.98); }
 
-    /* Overlay */
+    /* Menú/overlays */
     .overlay{
       position:absolute;
       inset:0;
-      background: rgba(0,0,0,.35);
-      display:none;
-      align-items:center;
+      display:flex;
+      align-items:flex-end;
       justify-content:center;
-      padding: 14px;
-      z-index: 30;
-      pointer-events:auto;
+      padding: 0 14px 16px;
+      box-sizing:border-box;
+      z-index:20;
+      pointer-events:none;
     }
-    .overlay.active{ display:flex; }
 
     .panel{
-      width:min(420px, 94%);
-      background: var(--panel);
-      border: 3px solid var(--panelStroke);
-      border-radius: 18px;
-      padding: 12px;
-      box-shadow: 0 18px 50px rgba(0,0,0,.25);
-    }
-    .panel h2{
-      margin: 0 0 8px 0;
-      font-size: 14px;
-      letter-spacing:.10em;
-      text-transform: uppercase;
-      color: rgba(0,0,0,.70);
-      text-align:center;
-    }
-    .row{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      padding: 10px;
-      border-radius: 14px;
-      background: rgba(0,0,0,.06);
-      border: 1px solid rgba(0,0,0,.10);
-      margin-bottom: 10px;
-      font-weight: 900;
-      color: rgba(0,0,0,.75);
-      font-size: 13px;
-    }
-    .toggle{ display:flex; gap:8px; }
-    .toggle button{
-      padding: 9px 10px;
-      border-radius: 12px;
-      border: 2px solid rgba(0,0,0,.10);
-      background: rgba(0,0,0,.08);
-      color: rgba(0,0,0,.75);
-      text-shadow:none;
-      font-weight:1000;
-      text-transform: uppercase;
-      letter-spacing:.04em;
-      font-size: 12px;
-    }
-    .toggle button.on{
-      background: rgba(78,192,78,.75);
-      color:#fff;
-      border-color: rgba(0,0,0,.12);
-      text-shadow: 0 2px 0 rgba(0,0,0,.20);
-    }
-    .panelBtns{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:10px;
-      margin-top: 6px;
-    }
-
-    .recordsBox{
-      border-radius: 16px;
-      border: 2px solid rgba(0,0,0,.10);
-      background: rgba(0,0,0,.05);
-      padding: 10px;
-      max-height: 160px;
-      overflow:auto;
-    }
-    .recordsBox h3{
-      margin:0 0 8px 0;
-      font-size: 11px;
-      letter-spacing:.10em;
-      text-transform:uppercase;
-      color: rgba(0,0,0,.70);
-      text-align:center;
-    }
-    .list{
-      list-style:none;
-      padding:0;
-      margin:0;
-      display:grid;
-      gap:8px;
-    }
-    .list li{
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      padding: 9px 10px;
-      border-radius: 14px;
-      background: rgba(255,255,255,.65);
-      border: 1px solid rgba(0,0,0,.10);
-      font-weight: 900;
-      color: rgba(0,0,0,.78);
-      font-size: 12px;
-    }
-
-    /* Game Over */
-    .goTop{ display:grid; gap:10px; }
-
-    /* ✅ foto más pequeña */
-    .goImg{
       width:100%;
-      height: 140px;
-      border-radius: 16px;
-      overflow:hidden;
-      border: 2px solid rgba(0,0,0,.12);
-      background: rgba(0,0,0,.06);
+      max-width: 420px;
+      pointer-events:auto;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      align-items:center;
     }
-    .goImg img{ width:100%; height:100%; object-fit: cover; display:block; }
 
-    /* ✅ textos más pequeños */
-    .goTitle{
-      text-align:center;
-      font-weight: 1000;
-      letter-spacing:.10em;
-      text-transform: uppercase;
-      color: rgba(0,0,0,.78);
-      margin: 0;
-      font-size: 16px;
+    .btnrow{
+      width:100%;
+      display:flex;
+      gap:12px;
     }
-    .goPhrase{
-      margin: 0;
-      text-align:center;
+
+    .btn{
+      flex:1;
+      border:0;
+      border-radius: 14px;
+      padding: 10px 12px;            /* botones más pequeños para móvil */
       font-weight: 900;
-      color: rgba(0,0,0,.70);
-      font-size: 12px;
+      letter-spacing: .5px;
+      font-size: 14px;               /* letras más pequeñas */
+      cursor:pointer;
+      color: #fff;
+      box-shadow: 0 8px 20px rgba(0,0,0,.22);
+      user-select:none;
+    }
+    .btn:active{ transform: translateY(1px); }
+
+    .btn.play{ background:#1fb65b; }
+    .btn.secondary{ background: rgba(255,255,255,.25); color:#eaf7ff; border: 1px solid rgba(255,255,255,.22); }
+    .btn.back{ background: rgba(255,255,255,.22); }
+
+    .credits{
+      text-align:center;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: rgba(234,247,255,.85);
+      text-shadow: 0 2px 0 rgba(0,0,0,.22);
+      margin-top: 2px;
+    }
+
+    .card{
+      width:100%;
+      background: rgba(0,0,0,.22);
+      border: 1px solid rgba(255,255,255,.16);
+      backdrop-filter: blur(6px);
+      border-radius: 16px;
+      padding: 10px 12px;
+      box-sizing:border-box;
+      color: rgba(255,255,255,.92);
+      font-size: 13px;
       line-height: 1.25;
     }
-    .nameRow{ display:flex; gap:10px; align-items:center; }
-    .nameRow input{
-      width:100%;
-      padding: 10px 10px;
-      border-radius: 14px;
-      border: 2px solid rgba(0,0,0,.12);
-      outline:none;
-      font-weight: 900;
+    .card h3{
+      margin:0 0 6px;
       font-size: 13px;
+      letter-spacing: .6px;
+      text-transform: uppercase;
+      opacity:.95;
     }
-    .smallNote{
-      margin: 0;
-      font-size: 11px;
-      color: rgba(0,0,0,.55);
-      text-align:center;
-      font-weight: 800;
+    .list{
+      margin:0; padding-left: 18px;
+    }
+    .small{
+      font-size: 12px;
+      opacity:.95;
     }
 
-    /* ✅ botones del gameover más pequeños */
-    .goBtns{
-      display:grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap:8px;
-      margin-top: 6px;
+    .hidden{ display:none !important; }
+
+    /* Banner siempre visible abajo */
+    .ad-banner{
+      height: var(--bannerH);
+      box-sizing:border-box;
+      background: rgba(255,255,255,.95);
+      border-top: 2px solid rgba(0,0,0,.08);
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      padding: 8px;
     }
-    .goBtns button{
-      padding: 10px 10px;
-      font-size: 12px;
+    .ad-inner{
+      width: min(96vw, var(--maxW));
+      height: 100%;
       border-radius: 14px;
+      background: repeating-linear-gradient(
+        45deg,
+        rgba(0,0,0,.05),
+        rgba(0,0,0,.05) 10px,
+        rgba(0,0,0,.02) 10px,
+        rgba(0,0,0,.02) 20px
+      );
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#0b2a5a;
+      font-weight: 900;
+      letter-spacing: .7px;
+      text-align:center;
+    }
+
+    /* Texto de “tap para saltar” */
+    .hint{
+      position:absolute;
+      left:0; right:0;
+      top: 62px;
+      text-align:center;
+      z-index:12;
+      color: rgba(255,255,255,.9);
+      font-weight:800;
+      font-size: 12px;
+      text-shadow: 0 2px 0 rgba(0,0,0,.22);
+      pointer-events:none;
+    }
+
+    /* Cuando pierdes: botones más pequeños */
+    .gameover .btn{
+      padding: 9px 10px;
+      font-size: 13px;
+      border-radius: 13px;
     }
   </style>
 </head>
+<body>
+  <div class="game-wrap">
+    <div class="stage">
+      <div class="topbar">
+        <h1 class="title">PORKY A PALACIO</h1>
+        <div class="subtitle">Atrapa la R celeste 🐷</div>
+      </div>
+      <div class="hint" id="hint">TOCA LA PANTALLA PARA SALTAR</div>
 
-<body class="pixel">
-  <div class="app">
-    <div class="phone">
+      <canvas id="c" width="360" height="520" aria-label="Juego Porky a Palacio"></canvas>
 
-      <!-- MENU -->
-      <section id="screenMenu" class="screen active">
-        <canvas id="menuCanvas"></canvas>
-
-        <div class="menuUI">
-          <div class="menuHeader">
-            <div class="title">PORKY A PALACIO</div>
-            <p class="sub">Atrapa la R celeste 🐷🪽</p>
-          </div>
-
-          <div></div>
-
-          <div class="menuFooter">
-            <div class="btnRow">
-              <button id="btnPlay" class="primary">Jugar</button>
-              <button id="btnOptions" class="ghost">Opciones</button>
-            </div>
-
-            <!-- ✅ crédito en el menú principal -->
-            <div style="
-              text-align:center;
-              font-size:11px;
-              font-weight:800;
-              letter-spacing:.14em;
-              color:rgba(255,255,255,.80);
-              text-shadow: 0 2px 0 rgba(0,0,0,.22);
-              margin-top:4px;
-              user-select:none;
-            ">CREADO POR KDS</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- GAME -->
-      <section id="screenGame" class="screen">
-        <canvas id="gameCanvas"></canvas>
-
-        <div class="hudScore">
-          PTS: <span id="uiScore">0</span> • R: <span id="uiR">0</span>
-          <span style="opacity:.75">•</span>
-          <span id="uiStage" style="opacity:.85">CERRO</span>
-        </div>
-
-        <div class="gearBtn" id="btnGear" title="Opciones">⚙️</div>
-      </section>
-
-      <!-- Opciones -->
-      <div class="overlay" id="optionsOverlay">
+      <!-- OVERLAY: MENÚ PRINCIPAL -->
+      <div class="overlay" id="menu">
         <div class="panel">
-          <h2>Opciones</h2>
-
-          <div class="row">
-            <div>Música</div>
-            <div class="toggle">
-              <button id="btnMusicOff">OFF</button>
-              <button id="btnMusicOn">ON</button>
-            </div>
+          <div class="btnrow">
+            <button class="btn play" id="btnPlay">JUGAR</button>
+            <button class="btn secondary" id="btnRecords">RECORDS</button>
           </div>
-
-          <div class="row">
-            <div>Efectos (SFX)</div>
-            <div class="toggle">
-              <button id="btnSfxOff">OFF</button>
-              <button id="btnSfxOn">ON</button>
-            </div>
-          </div>
-
-          <div class="recordsBox">
-            <h3>TOP 3</h3>
-            <ul id="recordsListOptions" class="list"></ul>
-            <div id="recordsEmptyOptions" style="display:none; text-align:center; font-weight:900; color:rgba(0,0,0,.55);">
-              Aún no hay records.
-            </div>
-          </div>
-
-          <div class="panelBtns">
-            <button id="btnResetRecords" class="danger">Reset</button>
-            <button id="btnCloseOptions" class="primary">Volver</button>
-          </div>
-
-          <p style="
-            margin-top:10px;
-            text-align:center;
-            font-size:11px;
-            font-weight:700;
-            letter-spacing:.12em;
-            color:rgba(0,0,0,.45);
-          ">CREADO POR KDS</p>
+          <div class="credits">CREADO POR KDS</div>
         </div>
       </div>
 
-      <!-- Game Over -->
-      <div class="overlay" id="gameOverOverlay">
+      <!-- OVERLAY: RECORDS -->
+      <div class="overlay hidden" id="records">
         <div class="panel">
-          <div class="goTop">
-            <div class="goImg">
-              <img id="goImg" src="motivador.png" alt="motivador" />
-            </div>
-            <p class="goTitle">NO TE RINDAS</p>
-            <p class="goPhrase" id="goPhrase">Sigue intentando.</p>
-
-            <p class="smallNote">
-              Puntos: <b><span id="goScore">0</span></b> • R: <b><span id="goR">0</span></b>
-            </p>
-
-            <div class="nameRow">
-              <input id="nameInput" type="text" maxlength="18" placeholder="Tu nombre para el récord" />
-            </div>
-
-            <div class="recordsBox">
-              <h3>TOP 3</h3>
-              <ul id="recordsListOver" class="list"></ul>
-              <div id="recordsEmptyOver" style="display:none; text-align:center; font-weight:900; color:rgba(0,0,0,.55);">
-                Aún no hay records.
-              </div>
-            </div>
-
-            <div class="goBtns">
-              <button id="btnSaveScore" class="btnBlue">Guardar</button>
-              <button id="btnRetry" class="primary">Jugar</button>
-              <button id="btnMenu" class="btnBlue">Menú</button>
-            </div>
+          <div class="card">
+            <h3>Top 3</h3>
+            <ol class="list" id="top3"></ol>
+            <div class="small" style="margin-top:8px; opacity:.9;">* Guardado en este dispositivo (localStorage).</div>
           </div>
+          <div class="btnrow">
+            <button class="btn back" id="btnBackFromRecords">VOLVER</button>
+          </div>
+          <div class="credits">CREADO POR KDS</div>
         </div>
       </div>
 
-      <!-- Banner fijo -->
-      <div class="bannerBar">
-        <img src="baner.jpg" alt="banner" />
+      <!-- OVERLAY: GAME OVER -->
+      <div class="overlay hidden gameover" id="gameOver">
+        <div class="panel">
+          <div class="card">
+            <h3>¡Perdiste!</h3>
+            <div>Puntaje: <b id="finalScore">0</b></div>
+            <div class="small" style="margin-top:6px;">Toca “Reintentar” o vuelve al menú.</div>
+          </div>
+          <div class="btnrow">
+            <button class="btn play" id="btnRetry">REINTENTAR</button>
+            <button class="btn secondary" id="btnMenu">MENÚ</button>
+          </div>
+          <div class="credits">CREADO POR KDS</div>
+        </div>
       </div>
 
     </div>
   </div>
 
-<script>
-/* =========================
-   Base 9:16 + banner fijo
-========================= */
-const BASE_W = 360;
-const BASE_H = 640;
-const BANNER_H = 70;           // ✅ más pequeño
-const PLAY_H = BASE_H - BANNER_H;
-const GROUND_H = 92;
-const GROUND_Y = PLAY_H - GROUND_H;
+  <!-- BANNER FIJO ABAJO: SIEMPRE VISIBLE -->
+  <div class="ad-banner">
+    <div class="ad-inner" id="adSlot">
+      <!-- AQUÍ REEMPLAZA POR TU CÓDIGO DE PUBLICIDAD (Adsense u otro) -->
+      BANNER PUBLICITARIO
+    </div>
+  </div>
 
-/* =========================
-   DOM
-========================= */
-const screenMenu = document.getElementById("screenMenu");
-const screenGame = document.getElementById("screenGame");
+  <script>
+    /*********************
+     *  ANTI “barra navegador”: calcula --vh real
+     *********************/
+    function setVh(){
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+    }
+    setVh();
+    window.addEventListener('resize', setVh, {passive:true});
 
-const btnPlay = document.getElementById("btnPlay");
-const btnOptions = document.getElementById("btnOptions");
-const btnGear = document.getElementById("btnGear");
+    /*********************
+     *  CANVAS & JUEGO (simple estilo flappy)
+     *********************/
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
 
-const optionsOverlay = document.getElementById("optionsOverlay");
-const btnCloseOptions = document.getElementById("btnCloseOptions");
+    const menu = document.getElementById('menu');
+    const records = document.getElementById('records');
+    const gameOver = document.getElementById('gameOver');
+    const hint = document.getElementById('hint');
 
-const btnResetRecords = document.getElementById("btnResetRecords");
-const recordsListOptions = document.getElementById("recordsListOptions");
-const recordsEmptyOptions = document.getElementById("recordsEmptyOptions");
+    const btnPlay = document.getElementById('btnPlay');
+    const btnRecords = document.getElementById('btnRecords');
+    const btnBackFromRecords = document.getElementById('btnBackFromRecords');
+    const btnRetry = document.getElementById('btnRetry');
+    const btnMenu = document.getElementById('btnMenu');
 
-const uiScore = document.getElementById("uiScore");
-const uiR = document.getElementById("uiR");
-const uiStage = document.getElementById("uiStage");
+    const top3El = document.getElementById('top3');
+    const finalScoreEl = document.getElementById('finalScore');
 
-const btnMusicOff = document.getElementById("btnMusicOff");
-const btnMusicOn  = document.getElementById("btnMusicOn");
-const btnSfxOff   = document.getElementById("btnSfxOff");
-const btnSfxOn    = document.getElementById("btnSfxOn");
+    // Ajuste de "subir cerdito + R": usamos una zona más arriba (0.35 del alto)
+    const pig = {
+      x: 90,
+      y: canvas.height * 0.35,   // 👈 SUBIDO
+      vy: 0,
+      w: 46,
+      h: 34
+    };
 
-/* Game over UI */
-const gameOverOverlay = document.getElementById("gameOverOverlay");
-const goPhrase = document.getElementById("goPhrase");
-const goScore = document.getElementById("goScore");
-const goR = document.getElementById("goR");
-const nameInput = document.getElementById("nameInput");
-const btnSaveScore = document.getElementById("btnSaveScore");
-const btnRetry = document.getElementById("btnRetry");
-const btnMenu = document.getElementById("btnMenu");
-const recordsListOver = document.getElementById("recordsListOver");
-const recordsEmptyOver = document.getElementById("recordsEmptyOver");
+    const letterR = {
+      x: 0, y: 0, w: 38, h: 38
+    };
 
-/* =========================
-   Canvas
-========================= */
-const menuCanvas = document.getElementById("menuCanvas");
-const mctx = menuCanvas.getContext("2d");
-mctx.imageSmoothingEnabled = false;
+    let score = 0;
+    let running = false;
+    let dead = false;
 
-const gameCanvas = document.getElementById("gameCanvas");
-const ctx = gameCanvas.getContext("2d");
-ctx.imageSmoothingEnabled = false;
+    const world = {
+      g: 0.45,
+      jump: -7.2,
+      speed: 2.25,
+      gap: 130,
+      spawnEvery: 92,
+      t: 0
+    };
 
-function fitCanvasToPhone(c){
-  const dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
-  c.width  = Math.floor(BASE_W * dpr);
-  c.height = Math.floor(BASE_H * dpr);
-  const g = c.getContext("2d");
-  g.setTransform(dpr,0,0,dpr,0,0);
-  g.imageSmoothingEnabled = false;
-}
-function fitAll(){
-  fitCanvasToPhone(menuCanvas);
-  fitCanvasToPhone(gameCanvas);
-}
-window.addEventListener("resize", fitAll);
-fitAll();
+    let pipes = [];
 
-/* =========================
-   Helpers
-========================= */
-function getCss(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
-function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
-function rect(g, x,y,w,h, fill, stroke){
-  g.fillStyle = fill;
-  g.fillRect(x|0,y|0,w|0,h|0);
-  if(stroke){
-    g.strokeStyle = stroke;
-    g.lineWidth = 2;
-    g.strokeRect((x|0)+1, (y|0)+1, (w|0)-2, (h|0)-2);
-    g.lineWidth = 1;
-  }
-}
+    function resetGame(){
+      score = 0;
+      running = false;
+      dead = false;
+      world.t = 0;
+      pipes = [];
+      pig.x = 90;
+      pig.y = canvas.height * 0.35; // 👈 SUBIDO
+      pig.vy = 0;
+      placeLetter();
+      hint.classList.remove('hidden');
+      draw(); // pinta el menú bonito
+    }
 
-/* =========================
-   Player name
-========================= */
-const PLAYER_KEY = "porky_player_name_v2";
-function getPlayerName(){ return (localStorage.getItem(PLAYER_KEY) || "").trim(); }
-function setPlayerName(n){
-  const v = (n || "").trim().slice(0,18);
-  if(v) localStorage.setItem(PLAYER_KEY, v);
-  else localStorage.removeItem(PLAYER_KEY);
-}
-nameInput.value = getPlayerName();
-nameInput.addEventListener("input", ()=> setPlayerName(nameInput.value));
+    function placeLetter(){
+      // La “R” sobre el cerdito, un poquito más arriba
+      letterR.x = pig.x + 25;
+      letterR.y = pig.y - 60; // 👈 SUBIDO
+    }
 
-/* =========================
-   Records (TOP 3)
-========================= */
-const STORAGE_KEY = "porky_records_v3";
-function loadRecords(){
-  try{
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const arr = raw ? JSON.parse(raw) : [];
-    return Array.isArray(arr) ? arr : [];
-  }catch{ return []; }
-}
-function saveRecords(records){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(records.slice(0,10)));
-}
-function addRecord(score, rCount, name){
-  const stamp = new Date().toLocaleString("es-PE", { hour12:false });
-  const r = loadRecords();
-  r.push({ score, rCount, name: name || "Anónimo", stamp });
-  r.sort((a,b)=> b.score - a.score);
-  saveRecords(r);
-}
-function resetRecords(){ localStorage.removeItem(STORAGE_KEY); }
+    function spawnPipe(){
+      const topMin = 70;
+      const topMax = canvas.height - 170;
+      const topH = Math.floor(topMin + Math.random() * (topMax - topMin));
+      pipes.push({
+        x: canvas.width + 20,
+        w: 44,
+        topH,
+        gap: world.gap,
+        passed:false
+      });
+    }
 
-/* ✅ SOLO TOP 3 EN PANTALLAS */
-function renderRecords(listEl, emptyEl){
-  const all = loadRecords();
-  const r = all.slice(0,3);
+    function drawPixelPig(x,y){
+      // cerdito pixel art simple
+      ctx.save();
+      ctx.translate(x,y);
+      ctx.imageSmoothingEnabled = false;
 
-  listEl.innerHTML = "";
-  if(!r.length){ emptyEl.style.display = "block"; return; }
-  emptyEl.style.display = "none";
+      // cuerpo
+      ctx.fillStyle = "#ff9fb4";
+      ctx.fillRect(0, 8, 46, 22);
 
-  r.forEach((it, i)=>{
-    const medal = (i===0?"🥇": i===1?"🥈":"🥉");
-    const li = document.createElement("li");
-    li.innerHTML = `<span>${medal} ${it.score} pts</span><span style="opacity:.85">${(it.name||"Anónimo")}</span>`;
-    listEl.appendChild(li);
-  });
-}
+      // cabeza
+      ctx.fillRect(28, 2, 18, 24);
 
-/* =========================
-   Phrases
-========================= */
-const frases = [
-  "No te rindas. El siguiente intento puede ser el mejor.",
-  "Respira. Ajusta tu salto. ¡Y vuelve a intentarlo!",
-  "Hoy caíste, pero mañana vuelas más alto.",
-  "Cada caída es entrenamiento. ¡Sigue!",
-  "La constancia gana. Un intento más.",
-  "Si te equivocas, aprendes. Si insistes, mejoras.",
-  "No es derrota: es práctica con estilo.",
-  "Tú puedes. Enfócate en el ritmo.",
-  "El éxito está después del intento que casi abandonas.",
-  "Un salto a la vez. Vamos de nuevo.",
-  "No te detengas. Estás más cerca de lo que crees.",
-  "La R te espera. ¡Inténtalo otra vez!"
-];
-const pickPhrase = ()=> frases[(Math.random()*frases.length)|0];
+      // hocico
+      ctx.fillStyle = "#ff7f9f";
+      ctx.fillRect(40, 12, 10, 8);
 
-/* =========================
-   Audio (chiptune original)
-========================= */
-const music = {
-  enabled: true,
-  sfxEnabled: true,
-  ctx: null,
-  master: null,
-  seqTimer: null,
-  started: false,
-  step: 0,
-  mode: "menu",
+      // ojo
+      ctx.fillStyle = "#111";
+      ctx.fillRect(38, 10, 3, 3);
 
-  ensureCtx(){
-    if(this.ctx) return;
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    this.ctx = new AudioCtx();
-    this.master = this.ctx.createGain();
-    this.master.gain.value = 0.10;
-    this.master.connect(this.ctx.destination);
-  },
+      // oreja
+      ctx.fillStyle = "#ff86a6";
+      ctx.fillRect(30, 0, 8, 6);
 
-  setMode(mode){
-    this.mode = mode;
-    if(this.enabled) this.startLoop();
-  },
-
-  ensureStartedIfEnabled(){
-    if(!this.enabled) return;
-    this.ensureCtx();
-    if(this.ctx.state === "suspended") this.ctx.resume();
-    if(this.started) return;
-    this.started = true;
-    this.startLoop();
-  },
-
-  startLoop(){
-    this.stopLoop();
-    if(!this.enabled) return;
-    this.ensureCtx();
-
-    const menuPattern = [
-      0, 7, 12, 16,  14, 12, 7, 0,
-      4, 9, 13, 16,  15, 13, 9, 4,
-      2, 7, 11, 14,  16, 14, 11, 7,
-      0, 3, 7, 10,  12, 10, 7, 3
-    ];
-    const gamePattern = [0,7,12,7, 0,7,14,7, 0,5,12,5, 0,5,10,5];
-
-    const bpm = (this.mode === "menu") ? 168 : 120;
-    const pattern = (this.mode === "menu") ? menuPattern : gamePattern;
-
-    const intervalMs = (60_000 / bpm) / 2;
-    this.step = 0;
-
-    this.seqTimer = setInterval(()=>{
-      if(!this.enabled || !this.ctx) return;
-
-      const base = (this.mode === "menu") ? 440 : 523.25;
-      const semis = pattern[this.step % pattern.length];
-      const freq = base * Math.pow(2, semis/12);
-
-      this.beep(freq, 0.07, 0.28, "square");
-
-      if(this.mode === "menu" && this.step % 4 === 0){
-        this.beep(freq/2, 0.06, 0.16, "triangle");
-        this.beep(freq*2, 0.04, 0.10, "square");
+      // patas (animación)
+      const step = (Math.floor(world.t/6) % 2);
+      ctx.fillStyle = "#ff86a6";
+      ctx.fillRect(8, 30, 6, 6);
+      ctx.fillRect(20, 30, 6, 6);
+      ctx.fillRect(32, 30, 6, 6);
+      if(step===0){
+        ctx.fillRect(14, 30, 4, 6);
+        ctx.fillRect(26, 30, 4, 6);
+      } else {
+        ctx.fillRect(12, 30, 4, 6);
+        ctx.fillRect(24, 30, 4, 6);
       }
 
-      if(this.step % 8 === 0) this.beep(base/2, 0.08, 0.10, "triangle");
-
-      this.step++;
-    }, intervalMs);
-  },
-
-  stopLoop(){
-    if(this.seqTimer){ clearInterval(this.seqTimer); this.seqTimer = null; }
-    this.started = false;
-  },
-
-  setMusic(on){
-    this.enabled = on;
-    if(!on) this.stopLoop();
-    else this.ensureStartedIfEnabled();
-  },
-  setSfx(on){ this.sfxEnabled = on; },
-
-  beep(freq, dur=0.08, vol=0.25, type="square"){
-    const t = this.ctx.currentTime;
-    const o = this.ctx.createOscillator();
-    const g = this.ctx.createGain();
-    o.type = type;
-    o.frequency.setValueAtTime(freq, t);
-    g.gain.setValueAtTime(0, t);
-    g.gain.linearRampToValueAtTime(vol, t + 0.01);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    o.connect(g); g.connect(this.master);
-    o.start(t); o.stop(t + dur + 0.02);
-  },
-
-  sfxJump(){ if(this.sfxEnabled && this.ctx) this.beep(880, 0.06, 0.28, "square"); },
-  sfxCoin(){ if(this.sfxEnabled && this.ctx){ this.beep(1320,0.05,0.28,"square"); this.beep(1760,0.05,0.20,"square"); } },
-  sfxHit(){ if(this.sfxEnabled && this.ctx) this.beep(180, 0.10, 0.30, "square"); },
-};
-
-function unlockAudioOnce(){
-  music.ensureCtx();
-  if(music.ctx.state === "suspended") music.ctx.resume();
-  window.removeEventListener("pointerdown", unlockAudioOnce);
-}
-window.addEventListener("pointerdown", unlockAudioOnce, { passive:true });
-
-function playMenuMusic(){ music.setMode("menu"); music.ensureStartedIfEnabled(); }
-function playGameMusic(){ music.setMode("game"); music.ensureStartedIfEnabled(); }
-
-/* =========================
-   Opciones Overlay
-========================= */
-function setToggleStyles(){
-  btnMusicOn.classList.toggle("on", music.enabled);
-  btnMusicOff.classList.toggle("on", !music.enabled);
-  btnSfxOn.classList.toggle("on", music.sfxEnabled);
-  btnSfxOff.classList.toggle("on", !music.sfxEnabled);
-}
-function openOptions(){
-  optionsOverlay.classList.add("active");
-  setToggleStyles();
-  renderRecords(recordsListOptions, recordsEmptyOptions);
-  if(game.running) game.pausedByOverlay = true;
-}
-function closeOptions(){
-  optionsOverlay.classList.remove("active");
-  if(game.running) game.pausedByOverlay = false;
-}
-function closeAllOverlays(){
-  optionsOverlay.classList.remove("active");
-  gameOverOverlay.classList.remove("active");
-  if(game.running) game.pausedByOverlay = false;
-}
-
-btnOptions.addEventListener("click", (e)=>{ e.preventDefault(); openOptions(); });
-btnGear.addEventListener("click", (e)=>{ e.preventDefault(); openOptions(); });
-btnCloseOptions.addEventListener("click", (e)=>{ e.preventDefault(); closeOptions(); });
-
-btnMusicOff.addEventListener("click", ()=>{ music.setMusic(false); setToggleStyles(); });
-btnMusicOn.addEventListener("click",  ()=>{ music.setMusic(true);  setToggleStyles(); });
-btnSfxOff.addEventListener("click", ()=>{ music.setSfx(false); setToggleStyles(); });
-btnSfxOn.addEventListener("click",  ()=>{ music.setSfx(true);  setToggleStyles(); });
-
-btnResetRecords.addEventListener("click", ()=>{
-  resetRecords();
-  renderRecords(recordsListOptions, recordsEmptyOptions);
-});
-
-/* =========================
-   MENU animation (CERROS + casitas)
-========================= */
-let menuRunning = true;
-let menuStart = performance.now();
-
-function drawMenuR(g, x,y, s){
-  rect(g,x,y,22*s,22*s,"rgba(255,255,255,.95)","rgba(0,0,0,.20)");
-  g.font = `1000 ${Math.round(16*s)}px system-ui`;
-  g.textAlign = "center";
-  g.textBaseline = "middle";
-  g.fillStyle = getCss("--rCyan");
-  g.fillText("R", x+11*s, y+12*s);
-}
-function drawMenuPorky(g, x,y,t, s){
-  rect(g, x, y, 28*s, 18*s, "#ffb6c8", "rgba(0,0,0,.18)");
-  rect(g, x+18*s, y+2*s, 16*s, 14*s, "#ffa9bf", "rgba(0,0,0,.18)");
-  rect(g, x+24*s, y+5*s, 2*s, 2*s, "rgba(0,0,0,.85)");
-  rect(g, x+28*s, y+7*s, 8*s, 6*s, "#ff99b5", "rgba(0,0,0,.18)");
-
-  // alas más pequeñas
-  const flap = Math.sin(t*18)*2*s;
-  rect(g, x+10*s,  y+5*s, 10*s, 6*s, "rgba(255,255,255,.85)", "rgba(0,0,0,.14)");
-  rect(g, x+10*s,  y+11*s+flap, 8*s, 4*s, "rgba(255,255,255,.65)", "rgba(0,0,0,.14)");
-
-  // 4 patas + colita
-  rect(g, x+3*s, y+16*s, 4*s, 4*s, "#e88aa8");
-  rect(g, x+9*s, y+16*s, 4*s, 4*s, "#e88aa8");
-  rect(g, x+17*s,y+16*s, 4*s, 4*s, "#e88aa8");
-  rect(g, x+23*s,y+16*s, 4*s, 4*s, "#e88aa8");
-  rect(g, x-4*s, y+10*s, 4*s, 4*s, "#ff99b5");
-  rect(g, x-6*s, y+12*s, 4*s, 4*s, "#ff99b5");
-}
-
-function drawCloudBlock(g, x,y){
-  rect(g,x, y, 30, 10, "rgba(255,255,255,.85)");
-  rect(g,x+10, y-8, 40, 10, "rgba(255,255,255,.85)");
-  rect(g,x+20, y+8, 36, 10, "rgba(255,255,255,.70)");
-  rect(g,x+42, y, 26, 10, "rgba(255,255,255,.85)");
-}
-
-function drawBrownHillsParallax(g, camX){
-  const farX  = -((camX*0.12) % 420);
-  const midX  = -((camX*0.28) % 420);
-  const nearX = -((camX*0.45) % 420);
-
-  rect(g,0,0,BASE_W,PLAY_H,"rgba(255,255,255,.03)");
-  drawCloudBlock(g, 30 + (camX*0.10 % 420), 90);
-  drawCloudBlock(g, 180 + (camX*0.07 % 520), 150);
-  drawCloudBlock(g, 260 - (camX*0.09 % 520), 70);
-
-  for(let i=0;i<3;i++){
-    const x = farX + i*420;
-    g.fillStyle = "rgba(170,120,80,.22)";
-    g.beginPath();
-    g.moveTo(x, 420);
-    g.quadraticCurveTo(x+120, 300, x+240, 420);
-    g.quadraticCurveTo(x+330, 510, x+420, 390);
-    g.lineTo(x+420, GROUND_Y);
-    g.lineTo(x, GROUND_Y);
-    g.closePath(); g.fill();
-  }
-
-  for(let i=0;i<3;i++){
-    const x = midX + i*420;
-    g.fillStyle = "rgba(155,95,55,.32)";
-    g.beginPath();
-    g.moveTo(x, 470);
-    g.quadraticCurveTo(x+100, 340, x+220, 460);
-    g.quadraticCurveTo(x+320, 560, x+420, 420);
-    g.lineTo(x+420, GROUND_Y);
-    g.lineTo(x, GROUND_Y);
-    g.closePath(); g.fill();
-  }
-
-  for(let i=0;i<3;i++){
-    const x = nearX + i*420;
-    g.fillStyle = "rgba(120,70,40,.40)";
-    g.beginPath();
-    g.moveTo(x, 520);
-    g.quadraticCurveTo(x+120, 380, x+240, 520);
-    g.quadraticCurveTo(x+320, 610, x+420, 480);
-    g.lineTo(x+420, GROUND_Y);
-    g.lineTo(x, GROUND_Y);
-    g.closePath(); g.fill();
-
-    const colors = ["#ff5a5a","#ffd166","#4cc9f0","#80ed99","#b5179e","#f77f00","#f72585","#4361ee"];
-    const houses = [
-      {dx: 60,  y: 440, c:colors[0]},
-      {dx: 92,  y: 418, c:colors[1]},
-      {dx: 128, y: 436, c:colors[2]},
-      {dx: 164, y: 412, c:colors[3]},
-      {dx: 205, y: 442, c:colors[4]},
-      {dx: 242, y: 420, c:colors[5]},
-      {dx: 280, y: 438, c:colors[6]},
-      {dx: 320, y: 416, c:colors[7]},
-    ];
-    for(const h of houses){
-      const hx = x + h.dx;
-      rect(g,hx, h.y, 18, 16, h.c, "rgba(0,0,0,.18)");
-      rect(g,hx-2, h.y-6, 22, 6, "rgba(0,0,0,.25)", "rgba(0,0,0,.18)");
-    }
-  }
-}
-
-function drawMenuFrame(){
-  if(!menuRunning) return;
-  const t = (performance.now() - menuStart)/1000;
-  const camX = t * 220;
-
-  mctx.clearRect(0,0,BASE_W,BASE_H);
-
-  /* ✅ MENÚ = CERROS + casitas */
-  drawBrownHillsParallax(mctx, camX*0.8);
-
-  const rScale = 6;
-  const rxCenter = (BASE_W/2) - (22*rScale)/2;
-  const ryCenter = (BASE_H/2) - (22*rScale)/2 - 70;
-  const bobX = Math.sin(t*1.1) * 2;
-  const bobY = Math.sin(t*1.4) * 2;
-  drawMenuR(mctx, rxCenter + bobX, ryCenter + bobY, rScale);
-
-  const pScale = 6;
-  const pigW = 28*pScale;
-  const px = (BASE_W/2) - pigW/2 - 36;
-  const py = (ryCenter + bobY) + (22*rScale) - 12;
-  drawMenuPorky(mctx, px + Math.sin(t*1.3)*2, py + Math.sin(t*1.8)*2, t, pScale);
-
-  requestAnimationFrame(drawMenuFrame);
-}
-function startMenu(){
-  menuRunning = true;
-  menuStart = performance.now();
-  playMenuMusic();
-  requestAnimationFrame(drawMenuFrame);
-}
-function stopMenu(){ menuRunning = false; }
-
-/* =========================
-   Fondos juego: cerro / machu / tren / selva
-========================= */
-function drawMachuParallax(g, camX){
-  const farX  = -((camX*0.10) % 420);
-  const midX  = -((camX*0.22) % 420);
-
-  rect(g,0,0,BASE_W,PLAY_H,"rgba(255,255,255,.03)");
-  drawCloudBlock(g, 40 + (camX*0.09 % 420), 95);
-  drawCloudBlock(g, 220 - (camX*0.07 % 520), 75);
-
-  for(let i=0;i<3;i++){
-    const x = farX + i*420;
-    g.fillStyle = "rgba(35,140,70,.22)";
-    g.beginPath();
-    g.moveTo(x, 420);
-    g.quadraticCurveTo(x+110, 250, x+210, 420);
-    g.quadraticCurveTo(x+300, 560, x+420, 320);
-    g.lineTo(x+420, GROUND_Y);
-    g.lineTo(x, GROUND_Y);
-    g.closePath(); g.fill();
-  }
-
-  for(let i=0;i<3;i++){
-    const x = midX + i*420;
-    g.fillStyle = "rgba(25,150,70,.30)";
-    g.beginPath();
-    g.moveTo(x, 500);
-    g.quadraticCurveTo(x+140, 260, x+240, 500);
-    g.quadraticCurveTo(x+300, 640, x+420, 380);
-    g.lineTo(x+420, GROUND_Y);
-    g.lineTo(x, GROUND_Y);
-    g.closePath(); g.fill();
-  }
-}
-
-function drawTrainParallax(g, camX){
-  const farX  = -((camX*0.08) % 420);
-  const midX  = -((camX*0.18) % 420);
-  const nearX = -((camX*0.34) % 420);
-
-  rect(g,0,0,BASE_W,PLAY_H,"rgba(255,255,255,.03)");
-  drawCloudBlock(g, 40 + (camX*0.07 % 420), 90);
-
-  for(let i=0;i<3;i++){
-    const x = farX + i*420;
-    g.fillStyle = "rgba(90,120,150,.18)";
-    g.beginPath();
-    g.moveTo(x, 440);
-    g.quadraticCurveTo(x+120, 300, x+240, 440);
-    g.quadraticCurveTo(x+320, 560, x+420, 380);
-    g.lineTo(x+420, GROUND_Y);
-    g.lineTo(x, GROUND_Y);
-    g.closePath(); g.fill();
-  }
-
-  for(let i=0;i<3;i++){
-    const x = midX + i*420;
-    rect(g, x+40, 320, 220, 120, "rgba(255,255,255,.18)", "rgba(0,0,0,.14)");
-    rect(g, x+30, 300, 240, 22, "rgba(200,60,60,.40)", "rgba(0,0,0,.14)");
-
-    rect(g, x+90, 312, 140, 20, "rgba(0,0,0,.16)", "rgba(0,0,0,.12)");
-    g.fillStyle = "rgba(255,255,255,.90)";
-    g.font = "1000 12px system-ui";
-    g.textAlign = "center";
-    g.textBaseline = "middle";
-    g.fillText("ESTACIÓN", x+160, 322);
-  }
-
-  for(let i=0;i<3;i++){
-    const x = nearX + i*420;
-    rect(g, x, 470, 420, 40, "rgba(0,0,0,.06)");
-    rect(g, x, 520, 420, 10, "rgba(0,0,0,.18)");
-    for(let s=0; s<20; s++){
-      rect(g, x+10+s*20, 530, 10, 6, "rgba(120,80,40,.40)", "rgba(0,0,0,.10)");
-    }
-  }
-
-  /* ✅ tren va de izquierda a derecha (no retrocede) */
-  const trainX = -220 + ((camX*1.2) % (BASE_W+220));
-  const trainY = GROUND_Y - 44;
-
-  rect(g, trainX, trainY, 48, 24, "#444", "rgba(0,0,0,.2)");
-  rect(g, trainX+10, trainY-10, 22, 10, "#666", "rgba(0,0,0,.2)");
-  rect(g, trainX+34, trainY+6, 10, 10, "rgba(255,255,255,.25)", "rgba(0,0,0,.12)");
-
-  for(let i=1;i<=3;i++){
-    rect(g, trainX + i*52, trainY, 46, 22, "#888", "rgba(0,0,0,.2)");
-    rect(g, trainX + i*52 + 8,  trainY+6, 12, 10, "rgba(255,255,255,.20)", "rgba(0,0,0,.10)");
-    rect(g, trainX + i*52 + 26, trainY+6, 12, 10, "rgba(255,255,255,.20)", "rgba(0,0,0,.10)");
-  }
-}
-
-function drawJungleParallax(g, camX){
-  const farX  = -((camX*0.10) % 420);
-  const midX  = -((camX*0.22) % 420);
-
-  rect(g,0,0,BASE_W,PLAY_H,"rgba(255,255,255,.03)");
-  drawCloudBlock(g, 50 + (camX*0.05 % 420), 80);
-  rect(g,0,160,BASE_W,220,"rgba(60,170,100,.08)");
-
-  for(let i=0;i<3;i++){
-    const x = farX + i*420;
-    for(let t=0;t<8;t++){
-      rect(g, x+30+t*50, 260, 18, 170, "rgba(30,120,70,.18)");
-      rect(g, x+20+t*50, 230, 38, 40, "rgba(50,170,90,.18)");
-    }
-  }
-
-  for(let i=0;i<3;i++){
-    const x = midX + i*420;
-    for(let p=0;p<6;p++){
-      const px = x+40+p*60;
-      rect(g, px, 300, 16, 190, "rgba(25,110,60,.26)", "rgba(0,0,0,.08)");
-      rect(g, px-28, 280, 70, 18, "rgba(70,200,110,.22)", "rgba(0,0,0,.08)");
-    }
-  }
-}
-
-/* fondos duran MÁS */
-const STAGES = [
-  { name:"CERRO", draw: drawBrownHillsParallax },
-  { name:"MACHU", draw: drawMachuParallax },
-  { name:"TREN",  draw: drawTrainParallax },
-  { name:"SELVA", draw: drawJungleParallax },
-];
-const STAGE_LEN = 3600;
-
-function drawStageBlend(g, dist, camX){
-  const total = STAGES.length * STAGE_LEN;
-  const d = dist % total;
-  const idx = Math.floor(d / STAGE_LEN);
-  const t = (d - idx*STAGE_LEN) / STAGE_LEN;
-  const a = STAGES[idx];
-  const b = STAGES[(idx+1) % STAGES.length];
-  uiStage.textContent = a.name;
-
-  g.save(); g.globalAlpha = 1 - t; a.draw(g, camX); g.restore();
-  g.save(); g.globalAlpha = t;     b.draw(g, camX); g.restore();
-}
-
-function drawGround(g){
-  rect(g,0,GROUND_Y,BASE_W,GROUND_H, getCss("--ground"));
-  rect(g,0,GROUND_Y+26,BASE_W,GROUND_H-26, getCss("--dirt"));
-  rect(g,0,GROUND_Y+56,BASE_W,GROUND_H-56, getCss("--dirt2"));
-  g.fillStyle = "rgba(0,0,0,.14)";
-  g.fillRect(0, GROUND_Y, BASE_W, 4);
-}
-
-/* =========================
-   Pipes + Porky + Token
-========================= */
-function drawPipe(g, x, gapY, gapH){
-  const pipeW = 62;
-  const capH = 16;
-  rect(g,x, 0, pipeW, gapY, getCss("--pipe"), getCss("--pipeEdge"));
-  rect(g,x-3, gapY-capH, pipeW+6, capH, getCss("--pipeDark"), getCss("--pipeEdge"));
-
-  const bottomY = gapY + gapH;
-  rect(g,x, bottomY, pipeW, GROUND_Y - bottomY, getCss("--pipe"), getCss("--pipeEdge"));
-  rect(g,x-3, bottomY, pipeW+6, capH, getCss("--pipeDark"), getCss("--pipeEdge"));
-}
-
-/* cerdito: alas pequeñas + 4 patas + colita */
-function drawPorkyGame(g, x,y, t){
-  rect(g,x, y, 26, 18, "#ffb6c8", "rgba(0,0,0,.18)");
-  rect(g,x+18, y+2, 16, 14, "#ffa9bf", "rgba(0,0,0,.18)");
-
-  rect(g,x+24, y+5, 2, 2, "rgba(0,0,0,.85)");
-  rect(g,x+28, y+7, 8, 6, "#ff99b5", "rgba(0,0,0,.18)");
-
-  rect(g,x+2,  y+16, 4, 4, "#e88aa8");
-  rect(g,x+8,  y+16, 4, 4, "#e88aa8");
-  rect(g,x+16, y+16, 4, 4, "#e88aa8");
-  rect(g,x+22, y+16, 4, 4, "#e88aa8");
-
-  rect(g,x-4, y+10, 4, 4, "#ff99b5");
-  rect(g,x-6, y+12, 4, 4, "#ff99b5");
-
-  const flap = Math.sin(t*16)*2;
-  rect(g, x+10, y+5, 10, 6, "rgba(255,255,255,.85)", "rgba(0,0,0,.14)");
-  rect(g, x+10, y+11+flap, 8, 4, "rgba(255,255,255,.65)", "rgba(0,0,0,.14)");
-}
-
-const TOKEN_SIZE = 28;
-function drawRToken(g, x,y){
-  rect(g,x,y,TOKEN_SIZE,TOKEN_SIZE,"rgba(255,255,255,.95)","rgba(0,0,0,.20)");
-  g.font = "1000 18px system-ui";
-  g.textAlign = "center";
-  g.textBaseline = "middle";
-  g.fillStyle = getCss("--rCyan");
-  g.fillText("R", x+TOKEN_SIZE/2, y+TOKEN_SIZE/2+1);
-}
-
-/* =========================
-   Game core
-========================= */
-const game = {
-  running:false,
-  pausedByOverlay:false,
-  state:"ready",
-  t:0,
-  last:0,
-  score:0,
-  rCount:0,
-  phrase:"",
-  savedThisOver:false,
-
-  pig:{ x: 110, y: 260, vy: 0 },
-  pipes:[],
-  tokens:[],
-  pipeTimer:0,
-  camX:0,
-  distance:0,
-
-  base:{ speed:190, gap:150, every:1.28 },
-  cfg:{ gravity:1200, jump:-360, speed:190, gap:150, every:1.28, tokenChance:0.85 },
-
-  startNew(){
-    this.running = true;
-    this.state = "ready";
-    this.t = 0;
-    this.last = performance.now();
-    this.score = 0;
-    this.rCount = 0;
-    this.savedThisOver = false;
-
-    uiScore.textContent = this.score;
-    uiR.textContent = this.rCount;
-
-    this.pig.y = 260;
-    this.pig.vy = 0;
-
-    this.pipes = [];
-    this.tokens = [];
-    this.pipeTimer = 0;
-    this.camX = 0;
-    this.distance = 0;
-
-    this.cfg.speed = this.base.speed;
-    this.cfg.gap   = this.base.gap;
-    this.cfg.every = this.base.every;
-
-    hideGameOverUI();
-    requestAnimationFrame(this.loop.bind(this));
-  },
-
-  jumpAction(){
-    if(!this.running || this.pausedByOverlay || this.state === "over") return;
-
-    music.ensureCtx();
-    if(music.ctx && music.ctx.state === "suspended") music.ctx.resume();
-    music.sfxJump();
-
-    if(this.state === "ready") this.state = "playing";
-    this.pig.vy = this.cfg.jump;
-  },
-
-  spawnPipeAndToken(){
-    const marginTop = 80;
-    const marginBottom = 160;
-    const gapH = this.cfg.gap;
-
-    const minY = marginTop;
-    const maxY = (GROUND_Y - marginBottom) - gapH;
-    const gapY = Math.floor(minY + Math.random() * Math.max(1,(maxY-minY)));
-
-    const pipeX = BASE_W + 40;
-    this.pipes.push({ x: pipeX, gapY, gapH, passed:false });
-
-    if(Math.random() < this.cfg.tokenChance){
-      const tokenX = pipeX + 16;
-      const tokenY = gapY + Math.floor(gapH/2) - (TOKEN_SIZE/2);
-      this.tokens.push({ x: tokenX, y: tokenY, alive:true });
-    }
-  },
-
-  collide(ax,ay,aw,ah, bx,by,bw,bh){
-    return ax < bx+bw && ax+aw > bx && ay < by+bh && ay+ah > by;
-  },
-
-  setOver(){
-    if(this.state === "over") return;
-    this.state = "over";
-    music.sfxHit();
-    this.phrase = pickPhrase();
-    showGameOverUI();
-  },
-
-  updateDifficulty(){
-    const d = this.distance;
-    const speed = this.base.speed + Math.min(110, d * 0.03);
-    const gap = this.base.gap - Math.min(45, d * 0.012);
-    const every = this.base.every - Math.min(0.35, d * 0.0002);
-    this.cfg.speed = clamp(speed, 190, 300);
-    this.cfg.gap   = clamp(gap, 105, 150);
-    this.cfg.every = clamp(every, 0.90, 1.28);
-  },
-
-  update(dt){
-    this.t += dt;
-    this.updateDifficulty();
-
-    this.camX += this.cfg.speed * dt;
-    this.distance += this.cfg.speed * dt;
-
-    if(this.state !== "playing") return;
-
-    this.pig.vy += this.cfg.gravity * dt;
-    this.pig.y += this.pig.vy * dt;
-
-    this.pipeTimer += dt;
-    if(this.pipeTimer >= this.cfg.every){
-      this.pipeTimer = 0;
-      this.spawnPipeAndToken();
+      ctx.restore();
     }
 
-    const pigRect = { x:this.pig.x, y:this.pig.y, w:26, h:18 };
-    const pipeW = 62;
+    function drawLetterR(){
+      ctx.save();
+      ctx.imageSmoothingEnabled = false;
+      ctx.fillStyle = "rgba(255,255,255,.95)";
+      ctx.fillRect(letterR.x, letterR.y, letterR.w, letterR.h);
+      ctx.strokeStyle = "rgba(0,0,0,.15)";
+      ctx.strokeRect(letterR.x+0.5, letterR.y+0.5, letterR.w-1, letterR.h-1);
 
-    for(const p of this.pipes){
-      p.x -= this.cfg.speed * dt;
+      // R celeste
+      ctx.fillStyle = "#1fb7ff";
+      // dibujito tipo pixel R
+      const px = 4, py = 4;
+      const gx = letterR.x + 10, gy = letterR.y + 7;
+      // columna izquierda
+      ctx.fillRect(gx, gy, px, py*6);
+      // parte superior
+      ctx.fillRect(gx, gy, px*4, py);
+      // medio
+      ctx.fillRect(gx, gy+py*3, px*4, py);
+      // derecha arriba
+      ctx.fillRect(gx+px*3, gy+py, px, py*2);
+      // pata diagonal
+      ctx.fillRect(gx+px*2, gy+py*4, px, py);
+      ctx.fillRect(gx+px*3, gy+py*5, px, py);
 
-      if(!p.passed && (p.x + pipeW) < pigRect.x){
-        p.passed = true;
-        this.score += 1;
-        uiScore.textContent = this.score;
+      ctx.restore();
+    }
+
+    function draw(){
+      // fondo
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.fillStyle = "#7ecfd4";
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+
+      // montañas simples
+      ctx.fillStyle = "rgba(0,0,0,.12)";
+      ctx.beginPath();
+      ctx.moveTo(0, canvas.height-80);
+      ctx.lineTo(80, canvas.height-130);
+      ctx.lineTo(170, canvas.height-90);
+      ctx.lineTo(260, canvas.height-150);
+      ctx.lineTo(360, canvas.height-100);
+      ctx.lineTo(360, canvas.height);
+      ctx.lineTo(0, canvas.height);
+      ctx.closePath();
+      ctx.fill();
+
+      // suelo
+      ctx.fillStyle = "rgba(0,0,0,.10)";
+      ctx.fillRect(0, canvas.height-22, canvas.width, 22);
+
+      // tuberías
+      for(const p of pipes){
+        // top
+        ctx.fillStyle = "#ffffff";
+        ctx.globalAlpha = 0.7;
+        ctx.fillRect(p.x, 0, p.w, p.topH);
+        // bottom
+        const bottomY = p.topH + p.gap;
+        ctx.fillRect(p.x, bottomY, p.w, canvas.height - bottomY);
+        ctx.globalAlpha = 1;
       }
 
-      const topRect = { x:p.x, y:0, w:pipeW, h:p.gapY };
-      const bottomY = p.gapY + p.gapH;
-      const botRect = { x:p.x, y:bottomY, w:pipeW, h:GROUND_Y - bottomY };
+      // R
+      drawLetterR();
 
-      if(this.collide(pigRect.x,pigRect.y,pigRect.w,pigRect.h, topRect.x,topRect.y,topRect.w,topRect.h) ||
-         this.collide(pigRect.x,pigRect.y,pigRect.w,pigRect.h, botRect.x,botRect.y,botRect.w,botRect.h)){
-        this.setOver();
+      // cerdito
+      drawPixelPig(pig.x, pig.y);
+
+      // score
+      ctx.fillStyle = "rgba(255,255,255,.95)";
+      ctx.font = "900 20px system-ui, Arial";
+      ctx.textAlign = "left";
+      ctx.fillText(String(score), 12, 34);
+    }
+
+    function collideRect(ax,ay,aw,ah, bx,by,bw,bh){
+      return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
+    }
+
+    function step(){
+      if(!running){
+        draw();
+        return;
       }
-    }
+      world.t++;
 
-    for(const tok of this.tokens){
-      if(!tok.alive) continue;
-      tok.x -= this.cfg.speed * dt;
-      const tRect = { x:tok.x, y:tok.y, w:TOKEN_SIZE, h:TOKEN_SIZE };
-      if(this.collide(pigRect.x,pigRect.y,pigRect.w,pigRect.h, tRect.x,tRect.y,tRect.w,tRect.h)){
-        tok.alive = false;
-        this.rCount += 1;
-        uiR.textContent = this.rCount;
-        this.score += 2;
-        uiScore.textContent = this.score;
-        music.sfxCoin();
+      // física cerdito
+      pig.vy += world.g;
+      pig.y += pig.vy;
+
+      // límites
+      if(pig.y < 0) { pig.y = 0; pig.vy = 0; }
+      if(pig.y + pig.h + 8 > canvas.height-22){
+        die();
       }
+
+      // R sigue al cerdito (un poco flotante)
+      letterR.x = pig.x + 25;
+      letterR.y = pig.y - 60;
+
+      // spawn pipes
+      if(world.t % world.spawnEvery === 0) spawnPipe();
+
+      // mover pipes + colisiones
+      for(const p of pipes){
+        p.x -= world.speed;
+
+        const bottomY = p.topH + p.gap;
+
+        // colisión con top/bottom pipes (usa hitbox del cerdito)
+        if(
+          collideRect(pig.x, pig.y+6, pig.w, pig.h, p.x, 0, p.w, p.topH) ||
+          collideRect(pig.x, pig.y+6, pig.w, pig.h, p.x, bottomY, p.w, canvas.height-bottomY)
+        ){
+          die();
+        }
+
+        // puntaje
+        if(!p.passed && p.x + p.w < pig.x){
+          p.passed = true;
+          score++;
+        }
+      }
+      // limpiar pipes
+      pipes = pipes.filter(p => p.x + p.w > -10);
+
+      // objetivo: “atrapa la R” (si toca la R suma extra y reubica)
+      if(collideRect(pig.x, pig.y, pig.w, pig.h, letterR.x, letterR.y, letterR.w, letterR.h)){
+        score += 2;
+        // “salta” un poco y coloca R arriba
+        pig.vy = Math.min(pig.vy, -3);
+        letterR.y = Math.max(20, letterR.y - 120);
+      }
+
+      draw();
+      requestAnimationFrame(step);
     }
 
-    this.pipes = this.pipes.filter(p => p.x > -160);
-    this.tokens = this.tokens.filter(t => t.x > -160);
-
-    if(this.pig.y < -30) this.pig.y = -30;
-    if(this.pig.y + 18 >= GROUND_Y){
-      this.pig.y = GROUND_Y - 18;
-      this.setOver();
+    function jump(){
+      if(dead) return;
+      if(!running){
+        startGame();
+        return;
+      }
+      pig.vy = world.jump;
+      hint.classList.add('hidden');
     }
-  },
 
-  draw(){
-    ctx.clearRect(0,0,BASE_W,BASE_H);
+    function startGame(){
+      menu.classList.add('hidden');
+      records.classList.add('hidden');
+      gameOver.classList.add('hidden');
+      running = true;
+      dead = false;
+      hint.classList.remove('hidden');
+      requestAnimationFrame(step);
+    }
 
-    drawStageBlend(ctx, this.distance, this.camX);
+    function die(){
+      if(dead) return;
+      dead = true;
+      running = false;
+      hint.classList.add('hidden');
+      finalScoreEl.textContent = score;
+      saveScore(score);
+      showGameOver();
+      draw();
+    }
 
-    for(const p of this.pipes) drawPipe(ctx, p.x, p.gapY, p.gapH);
-    for(const tok of this.tokens) if(tok.alive) drawRToken(ctx, tok.x, tok.y);
+    function showGameOver(){
+      gameOver.classList.remove('hidden');
+      menu.classList.add('hidden');
+      records.classList.add('hidden');
+    }
 
-    drawGround(ctx);
-    drawPorkyGame(ctx, this.pig.x, this.pig.y, this.t);
-  },
+    function showMenu(){
+      gameOver.classList.add('hidden');
+      records.classList.add('hidden');
+      menu.classList.remove('hidden');
+      resetGame();
+    }
 
-  loop(now){
-    if(!this.running) return;
-    const dt = clamp((now - this.last)/1000, 0, 0.033);
-    this.last = now;
+    function showRecords(){
+      menu.classList.add('hidden');
+      gameOver.classList.add('hidden');
+      records.classList.remove('hidden');
+      renderTop3();
+    }
 
-    if(!this.pausedByOverlay && this.state !== "over") this.update(dt);
-    this.draw();
+    /*********************
+     *  TOP 3 (localStorage)
+     *********************/
+    const KEY = "porky_records_top3_v1";
+    function loadTop3(){
+      try{
+        const arr = JSON.parse(localStorage.getItem(KEY) || "[]");
+        return Array.isArray(arr) ? arr : [];
+      }catch{ return []; }
+    }
+    function saveScore(s){
+      const arr = loadTop3();
+      arr.push({ score: s, date: Date.now() });
+      arr.sort((a,b)=> b.score - a.score);
+      const top = arr.slice(0,3);
+      localStorage.setItem(KEY, JSON.stringify(top));
+    }
+    function renderTop3(){
+      const arr = loadTop3();
+      top3El.innerHTML = "";
+      if(arr.length === 0){
+        top3El.innerHTML = "<li>Sin registros todavía</li>";
+        return;
+      }
+      arr.forEach((r,i)=>{
+        const d = new Date(r.date);
+        const li = document.createElement("li");
+        li.innerHTML = `<b>${r.score}</b> <span style="opacity:.8">(${d.toLocaleDateString()})</span>`;
+        top3El.appendChild(li);
+      });
+    }
 
-    requestAnimationFrame(this.loop.bind(this));
-  }
-};
+    /*********************
+     *  EVENTOS (tap/click)
+     *********************/
+    const onPointer = (e)=>{
+      e.preventDefault();
+      jump();
+    };
 
-/* =========================
-   Game Over UI
-========================= */
-function showGameOverUI(){
-  game.pausedByOverlay = true;
-  goPhrase.textContent = game.phrase || pickPhrase();
-  goScore.textContent = game.score;
-  goR.textContent = game.rCount;
-  nameInput.value = getPlayerName();
-  gameOverOverlay.classList.add("active");
-  renderRecords(recordsListOver, recordsEmptyOver);
-}
-function hideGameOverUI(){
-  gameOverOverlay.classList.remove("active");
-  game.pausedByOverlay = false;
-  game.savedThisOver = false;
-}
-function saveScoreIfNeeded(){
-  if(game.savedThisOver) return;
-  const name = getPlayerName() || "Anónimo";
-  addRecord(game.score, game.rCount, name);
-  game.savedThisOver = true;
-  renderRecords(recordsListOver, recordsEmptyOver);
-  renderRecords(recordsListOptions, recordsEmptyOptions);
-}
+    canvas.addEventListener('pointerdown', onPointer, {passive:false});
+    document.addEventListener('keydown', (e)=>{
+      if(e.code === "Space" || e.code === "ArrowUp") jump();
+    });
 
-btnSaveScore.addEventListener("click", ()=> saveScoreIfNeeded());
-btnRetry.addEventListener("click", ()=>{
-  saveScoreIfNeeded();
-  hideGameOverUI();
-  startGame();
-});
-btnMenu.addEventListener("click", ()=>{
-  saveScoreIfNeeded();
-  hideGameOverUI();
-  showScreen("menu");
-});
+    btnPlay.addEventListener('click', ()=>{ resetGame(); startGame(); });
+    btnRecords.addEventListener('click', showRecords);
+    btnBackFromRecords.addEventListener('click', showMenu);
+    btnRetry.addEventListener('click', ()=>{ resetGame(); startGame(); });
+    btnMenu.addEventListener('click', showMenu);
 
-/* =========================
-   Navigation
-========================= */
-function showScreen(which){
-  closeAllOverlays();
-  if(which === "menu"){
-    screenGame.classList.remove("active");
-    screenMenu.classList.add("active");
-    stopGame();
-    startMenu();
-  }else{
-    screenMenu.classList.remove("active");
-    screenGame.classList.add("active");
-    stopMenu();
-  }
-}
+    // Evita “doble tap zoom” raro en iOS
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function (event) {
+      const now = (new Date()).getTime();
+      if (now - lastTouchEnd <= 300) event.preventDefault();
+      lastTouchEnd = now;
+    }, {passive:false});
 
-/* =========================
-   Game start/stop
-========================= */
-function startGame(){
-  showScreen("game");
-  game.startNew();
-  playGameMusic();
-}
-function stopGame(){ game.running = false; }
-
-/* =========================
-   Tap to play
-========================= */
-gameCanvas.addEventListener("pointerdown", (e)=>{
-  if(optionsOverlay.classList.contains("active")) return;
-  if(gameOverOverlay.classList.contains("active")) return;
-  e.preventDefault();
-  game.jumpAction();
-},{ passive:false });
-
-/* =========================
-   Buttons
-========================= */
-btnPlay.addEventListener("click", (e)=>{ e.preventDefault(); startGame(); });
-
-/* =========================
-   Init
-========================= */
-startMenu();
-</script>
+    // Inicio
+    resetGame();
+    renderTop3();
+    draw();
+  </script>
 </body>
 </html>
